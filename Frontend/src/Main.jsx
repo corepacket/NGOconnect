@@ -1,15 +1,17 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
-import './index.css'
+import './Index.css'
 import { BrowserRouter } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
+import { AuthProvider } from './auth/AuthContext'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
-      <App />
-      <Toaster 
+      <AuthProvider>
+        <App />
+        <Toaster 
         position="top-right"
         toastOptions={{
           duration: 4000,
@@ -25,7 +27,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             },
           },
         }}
-      />
+        />
+      </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>,
 )

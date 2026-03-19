@@ -1,13 +1,17 @@
 import { useState, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { FaHandsHelping, FaBars, FaTimes } from 'react-icons/fa'
-import { HiHome, HiInformationCircle, HiCalendar, HiUserGroup } from 'react-icons/hi'
+import { HiHome, HiInformationCircle, HiCalendar, HiUserGroup, HiLogout } from 'react-icons/hi'
+import { useAuth } from '../auth/AuthContext'
+import toast from 'react-hot-toast'
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const location = useLocation()
+  const navigate = useNavigate()
+  const { isAuthenticated, userType, logout } = useAuth()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -17,12 +21,24 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const navLinks = [
+  const baseNavLinks = [
     { name: 'Home', path: '/', icon: <HiHome className="w-5 h-5" /> },
     { name: 'Events', path: '/events', icon: <HiCalendar className="w-5 h-5" /> },
     { name: 'About', path: '/about', icon: <HiInformationCircle className="w-5 h-5" /> },
-    { name: 'Dashboard', path: '/dashboard', icon: <HiUserGroup className="w-5 h-5" /> },
   ]
+
+  const dashboardLink = isAuthenticated
+    ? { name: 'Dashboard', path: userType === 'ngo' ? '/dashboard/ngo' : '/dashboard/volunteer', icon: <HiUserGroup className="w-5 h-5" /> }
+    : null
+
+  const navLinks = dashboardLink ? [...baseNavLinks, dashboardLink] : baseNavLinks
+
+  const handleLogout = () => {
+    logout()
+    toast.success('Logged out successfully')
+    navigate('/')
+    setIsOpen(false)
+  }
 
   return (
     <nav
@@ -66,18 +82,30 @@ const Navbar = () => {
               </Link>
             ))}
             <div className="flex items-center space-x-3">
-              <Link
-                to="/login"
-                className="px-4 py-2 text-earth-600 hover:text-primary-600 transition-colors"
-              >
-                Login
-              </Link>
-              <Link
-                to="/register"
-                className="px-6 py-2 bg-gradient-to-r from-primary-600 to-secondary-600 text-white rounded-lg hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
-              >
-                Register
-              </Link>
+              {isAuthenticated ? (
+                <button
+                  onClick={handleLogout}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-earth-600 hover:text-primary-600 transition-colors"
+                >
+                  <HiLogout className="w-5 h-5" />
+                  Log out
+                </button>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="px-4 py-2 text-earth-600 hover:text-primary-600 transition-colors"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="px-6 py-2 bg-gradient-to-r from-primary-600 to-secondary-600 text-white rounded-lg hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
+                  >
+                    Register
+                  </Link>
+                </>
+              )}
             </div>
           </div>
 
@@ -114,20 +142,32 @@ const Navbar = () => {
               </Link>
             ))}
             <div className="pt-4 space-y-2">
-              <Link
-                to="/login"
-                onClick={() => setIsOpen(false)}
-                className="block w-full px-4 py-3 text-center text-earth-600 border border-earth-200 rounded-lg hover:bg-primary-50 transition-colors"
-              >
-                Login
-              </Link>
-              <Link
-                to="/register"
-                onClick={() => setIsOpen(false)}
-                className="block w-full px-4 py-3 text-center bg-gradient-to-r from-primary-600 to-secondary-600 text-white rounded-lg hover:shadow-lg transition-all"
-              >
-                Register
-              </Link>
+              {isAuthenticated ? (
+                <button
+                  onClick={handleLogout}
+                  className="block w-full px-4 py-3 text-center text-earth-600 border border-earth-200 rounded-lg hover:bg-primary-50 transition-colors flex items-center justify-center gap-2"
+                >
+                  <HiLogout className="w-5 h-5" />
+                  Log out
+                </button>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    onClick={() => setIsOpen(false)}
+                    className="block w-full px-4 py-3 text-center text-earth-600 border border-earth-200 rounded-lg hover:bg-primary-50 transition-colors"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/register"
+                    onClick={() => setIsOpen(false)}
+                    className="block w-full px-4 py-3 text-center bg-gradient-to-r from-primary-600 to-secondary-600 text-white rounded-lg hover:shadow-lg transition-all"
+                  >
+                    Register
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </motion.div>
