@@ -1,5 +1,5 @@
 import { generateToken } from "../lib/utils.js"
-import bcrypt from bcryptjs
+import bcrypt from "bcryptjs"
 import NGO from "../models/ngo.model.js"
 
 export const registerNGO = async(req, res) => {
@@ -14,11 +14,11 @@ export const registerNGO = async(req, res) => {
             return res.status(400).json({message: "Password must be at least 6 characters"})
         }
 
-        if(phoneNumber.length!=10){
+        if(contactNumber.length!=10){
             return res.status(400).json({message: "Phone number should be of 10 digits"})
         }
 
-        const salt = await bcrypt.genSlat(10)
+        const salt = await bcrypt.genSalt(10)
         const hashedPassword = await bcrypt.hash(password, salt)
 
         const ngo = await NGO.create({
@@ -55,14 +55,12 @@ export const loginNGO = async(req, res) => {
         const ngo = await NGO.findOne({email})
 
         if(!ngo){
-            return res.status(400).json({message: "Invalid credentials"}
-            )
+            return res.status(400).json({message: "Invalid credentials"})
         }
 
         const isPasswordCorrect = await bcrypt.compare(password, ngo.password)
-
         if(!isPasswordCorrect){
-            return res.staus(400).json({message: "Invalid credentials"})
+            return res.status(400).json({message: "Invalid credentials"})
         }
 
         generateToken(ngo._id, "ngo", res)
