@@ -1,9 +1,8 @@
-import mongoose from 'mongoose'
-import Event from './event.model.js'
+import mongoose, {Schema} from 'mongoose'
 
 const userSchema = new mongoose.Schema(
     {
-        fullName: {
+        fullname: {
             type: String,
             required: true
         },
