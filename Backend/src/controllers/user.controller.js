@@ -40,7 +40,7 @@ export const registerUser = async (req, res) => {
         })
     } 
     catch(error){
-        console.log(`Error in registering user ${error}`)
+        console.log(`Error in registering user : ${error}`)
         return res.status(500).json({message: "Internal error in registering user"})
     }
 }
@@ -75,5 +75,16 @@ export const loginUser = async (req, res) => {
     catch(error){
         console.log(`Errror in logging in : ${error}`)
         return res.status(500).json({message: "Iternal error in logging in"})
+    }
+}
+
+export const logoutUser = async (req, res) => {
+    try{
+        res.cookie("jwt","",{maxAge: 0})
+        return res.status(200).json({message: "Logged out successfully"})
+    }
+    catch(error){
+        console.log(`Error in logging out : ${error}`)
+        return res.status(500).json("Internal error in logging out")
     }
 }
