@@ -40,6 +40,42 @@ export const registerNGO = async(req, res) => {
     }
     catch(error){
         console.log(`Error in registering NGO : ${error}`)
-        return res.status(500).json({message: "Internal server error in registering NGO"})
+        return res.status(500).json({message: "Internal error in registering NGO"})
+    }
+}
+
+export const loginNGO = async(req, res) => {
+    const {email, passowrd} = req.body
+
+    try{
+        if(!email || !password){
+            return res.status(400).json({message: "All fields are required"})
+        }
+
+        const ngo = await NGO.findOne({email})
+
+        if(!ngo){
+            return res.status(400).json({message: "Invalid credentials"}
+            )
+        }
+
+        const isPasswordCorrect = await bcrypt.compare(password, ngo.password)
+
+        if(!isPasswordCorrect){
+            return res.staus(400).json({message: "Invalid credentials"})
+        }
+
+        generateToken(ngo._id, "ngo", res)
+        
+        return res.status(200).json({
+            _id: ngo._id,
+            name: ngo.name,
+            email: ngo.email,
+            contactNumber: ngo.contactNumber
+        })
+    }
+    catch(error){
+        console.log(`Error in logging in : ${error}`)
+        return res.status(500).json({message: "Internal error in logging in"})
     }
 }
