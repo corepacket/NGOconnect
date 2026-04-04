@@ -45,7 +45,7 @@ export const registerNGO = async(req, res) => {
 }
 
 export const loginNGO = async(req, res) => {
-    const {email, passowrd} = req.body
+    const {email, password} = req.body
 
     try{
         if(!email || !password){
@@ -77,5 +77,16 @@ export const loginNGO = async(req, res) => {
     catch(error){
         console.log(`Error in logging in : ${error}`)
         return res.status(500).json({message: "Internal error in logging in"})
+    }
+}
+
+export const logoutNGO = async (_, res) => {
+    try{
+        res.cookie("jwt", "", {maxAge: 0})
+        return res.status(200).json({message: "Logged out successfully"})
+    }
+    catch(error){
+        console.log(`Error in logging out : ${error}`)
+        return res.status(500).json({message: "Internal error in logging out"})
     }
 }
