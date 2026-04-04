@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken"
 import User from "../models/user.model.js"
+import NGO from "../models/ngo.model.js"
 
 export const protectRoute = async (req,res,next) => {
     try{
@@ -15,13 +16,27 @@ export const protectRoute = async (req,res,next) => {
             return res.status(401).json({message: "Unauthorized : Invalid  token"})
         }
 
-        const user = await User.findById(decoded.userId).select("-password")
+        if(decoded.role=="user"){
+            const user = await User.findById(decoded.userId).select("-password")
 
-        if(!user){
-            return res.status(404).json({message: "User not found"})
+            if(!user){
+                return res.status(404).json({message: "User not found"})
+            }
+
+            req.user=user
         }
+        
+        if(decoded.role=="ngo"){
+            const ngo = await NGO.findById(decoded.userId).select("-password")
 
-        req.user=user
+            if(!ngo){
+                return res.status(404).json({message: "NGO not found"})
+            }
+
+            req.ngo = ngo
+        }
+        req.role = decoded.role
+        
         next()
     }
     catch(error){

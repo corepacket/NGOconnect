@@ -19,6 +19,10 @@ export const registerUser = async (req, res) => {
             return res.status(400).json({message: "Password must be at least 6 characters"})
         }
 
+        if(phoneNumber.length != 10){
+            return res.status(400).json({message: "Phone number should be of 10 digits"})
+        }
+
         const salt = await bcrypt.genSalt(10)
         const hashedPassword = await bcrypt.hash(password, salt)
         
@@ -30,7 +34,7 @@ export const registerUser = async (req, res) => {
             address : req.body.address || ""
         })
 
-        generateToken(user._id,res)
+        generateToken(user._id, "user", res)
 
         return res.status(201).json({
             _id: user._id,
@@ -63,7 +67,7 @@ export const loginUser = async (req, res) => {
             return res.status(400).json({message: "Invalid credentials"})
         }
 
-        generateToken(user._id, res)
+        generateToken(user._id, "user", res)
 
         return res.status(200).json({
             _id: user._id,
