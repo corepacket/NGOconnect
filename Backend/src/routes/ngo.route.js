@@ -1,4 +1,5 @@
 import express from 'express'
+import {registerNGO, loginNGO, logoutNGO } from '../controllers/ngo.controller.js'
 
 const router = express.Router()
 
