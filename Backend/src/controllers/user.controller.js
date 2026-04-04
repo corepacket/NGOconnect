@@ -3,9 +3,8 @@ import User from "../models/user.model.js"
 import {generateToken} from "../lib/utils.js"
 
 export const registerUser = async (req, res) => {
+    const {fullname, email, password, phoneNumber} = req.body
     try{
-        const {fullname, email, password, phoneNumber} = req.body
-
         if(!fullname || !email || !password || !phoneNumber){
             return res.status(400).json({message:"All fields are required"})
         }
@@ -44,5 +43,37 @@ export const registerUser = async (req, res) => {
         console.log(`Error in registering user ${error}`)
         return res.status(500).json({message: "Internal error in registering user"})
     }
+}
 
+export const loginUser = async (req, res) => {
+    try{
+        const {email, password} = req.body
+
+        if(!email || !password){
+            return res.status(400).json({message: "All fields are required"})
+        }
+
+        const user = await User.findOne({email})
+        if(!user){
+            return res.status(400).json({message: "Invalid credentials"})
+        }
+
+        const isPasswordCorrect = await bcrypt.compare(password, user.password)
+        if(!isPasswordCorrect){
+            return res.status(400).json({message: "Invalid credentials"})
+        }
+
+        generateToken(user._id, res)
+
+        return res.status(200).json({
+            _id: user._id,
+            fullname: user.fullname,
+            email: user.email,
+            phoneNumber: user.phoneNumber
+        })
+    }
+    catch(error){
+        console.log(`Errror in logging in : ${error}`)
+        return res.status(500).json({message: "Iternal error in logging in"})
+    }
 }
