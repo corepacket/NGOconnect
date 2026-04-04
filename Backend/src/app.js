@@ -11,8 +11,8 @@ app.use(express.json())
 app.use(cookieParser())
 app.use(cors())
 
-app.post("/api/users",userRouter)
-app.post("/api/ngos",ngoRouter)
-app.post("/api/events",eventRouter)
+app.use("/api/users",userRouter)
+app.use("/api/ngos",ngoRouter)
+app.use("/api/events",eventRouter)
 
 export default app
