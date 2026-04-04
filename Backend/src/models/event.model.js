@@ -10,7 +10,10 @@ const eventSchema = new mongoose.Schema(
         type:String,
         required:true
     },
-
+    location: {
+      type: String,
+      required: true
+    },
     date:{
         type:Date,
         required:true
@@ -22,11 +25,6 @@ const eventSchema = new mongoose.Schema(
         required:true
     },
 
-    category:{
-        type:String,
-        required:true
-    },
-
    skillsRequired: [
     {
       type: String
@@ -34,7 +32,8 @@ const eventSchema = new mongoose.Schema(
   ],
 
   maxVolunteers: {
-    type: Number
+    type: Number,
+    required: true
   },
 
   volunteers: [
@@ -45,7 +44,7 @@ const eventSchema = new mongoose.Schema(
   ],
 }, {timestamps: true});
 
-eventSchema.index({"location.city":1});
+eventSchema.index({location:1});
 eventSchema.index({category:1});
 eventSchema.index({ skillsRequired: 1 });
 

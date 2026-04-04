@@ -16,25 +16,23 @@ export const protectRoute = async (req,res,next) => {
             return res.status(401).json({message: "Unauthorized : Invalid  token"})
         }
 
+        let account
         if(decoded.role=="user"){
-            const user = await User.findById(decoded.userId).select("-password")
+            const account = await User.findById(decoded.id).select("-password")
 
-            if(!user){
+            if(!account){
                 return res.status(404).json({message: "User not found"})
             }
-
-            req.user=user
         }
         
         if(decoded.role=="ngo"){
-            const ngo = await NGO.findById(decoded.userId).select("-password")
+            const account = await NGO.findById(decoded.id).select("-password")
 
-            if(!ngo){
+            if(!account){
                 return res.status(404).json({message: "NGO not found"})
             }
-
-            req.ngo = ngo
         }
+        req.user = account
         req.role = decoded.role
         
         next()
