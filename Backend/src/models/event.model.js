@@ -1,7 +1,7 @@
-const mongoose=require("mongoose");
+import mongoose, {Schema} from 'mongoose'
 
-const eventSchema= new mongoose.Schema({
-
+const eventSchema = new mongoose.Schema(
+  {
     title:{
         type:String,
         required:true
@@ -15,15 +15,18 @@ const eventSchema= new mongoose.Schema({
         type:Date,
         required:true
     },
+
     ngoId:{
         type:mongoose.Schema.Types.ObjectId,
         ref:"NGO",
         required:true
     },
+
     category:{
         type:String,
         required:true
     },
+
    skillsRequired: [
     {
       type: String
@@ -40,15 +43,11 @@ const eventSchema= new mongoose.Schema({
       ref: "User"
     }
   ],
-
-  createdAt: {
-    type: Date,
-    default: Date.now
-  }
-});
+}, {timestamps: true});
 
 eventSchema.index({"location.city":1});
 eventSchema.index({category:1});
 eventSchema.index({ skillsRequired: 1 });
 
-module.exports=mongoose.model("Event",eventSchema);
+const Event = mongoose.model("Event",eventSchema)
+export default Event

@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose, {Schema} from 'mongoose'
 
 const registrationSchema = new mongoose.Schema({
   userId: {
@@ -37,4 +37,5 @@ registrationSchema.index(
   { unique: true }
 );
 
-module.exports = mongoose.model("Registration", registrationSchema);
+const Registration = mongoose.model("Registration", registrationSchema)
+export default Registration

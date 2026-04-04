@@ -1,5 +1,9 @@
 import express from 'express'
 
-const router = express.Router();
+const router = express.Router()
 
-export default router;
+router.post("/register-ngo",registerNGO)
+router.post("/login-ngo",loginNGO)
+router.post("/logout-ngo",logoutNGO)
+
+export default router

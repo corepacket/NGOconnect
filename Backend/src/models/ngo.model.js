@@ -1,5 +1,4 @@
 import mongoose from 'mongoose'
-import Event from './event.model.js'
 
 const ngoSchema = new mongoose.Schema(
     {
