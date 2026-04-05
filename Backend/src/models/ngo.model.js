@@ -24,6 +24,12 @@ const ngoSchema = new mongoose.Schema(
             type: String,
             required: true
         },
+        logo: {
+            type: String
+        },
+        logoId: {
+            type: String
+        },
         eventsPosted: [
         {
             type: Schema.Types.ObjectId,

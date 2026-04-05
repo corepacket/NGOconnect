@@ -1,6 +1,7 @@
 import { generateToken } from "../lib/utils.js"
 import bcrypt from "bcryptjs"
 import NGO from "../models/ngo.model.js"
+import { uploadOnCloudinary } from "../lib/cloudinary.js"
 
 export const registerNGO = async(req, res) => {
     const {name, email, password, contactNumber, location} = req.body
@@ -8,6 +9,12 @@ export const registerNGO = async(req, res) => {
     try{
         if(!name || !email || !password || !contactNumber || !location){
             return res.status(400).json({message: "All fields are required"})
+        }
+
+        const existingNGO = await NGO.findOne({email})
+
+        if(existingNGO){
+            return res.status(400).json({message: "NGO already exists"})
         }
 
         if(password.length<6){
@@ -18,6 +25,13 @@ export const registerNGO = async(req, res) => {
             return res.status(400).json({message: "Phone number should be of 10 digits"})
         }
 
+        let logoLocaPath
+        if(req.files.logo && req.files.logo[0]){
+            logoLocaPath = req.files.logo[0].path
+        }
+
+        const logo = logoLocaPath ? await uploadOnCloudinary(logoLocaPath) : null
+
         const salt = await bcrypt.genSalt(10)
         const hashedPassword = await bcrypt.hash(password, salt)
 
@@ -26,7 +40,9 @@ export const registerNGO = async(req, res) => {
             email,
             password: hashedPassword,
             contactNumber,
-            location
+            location,
+            logo: logo.secure_url || "",
+            logoId: logo.id || ""
         })
 
         generateToken(ngo._id, "ngo", res)
