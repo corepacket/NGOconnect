@@ -42,7 +42,7 @@ export const registerNGO = async(req, res) => {
             contactNumber,
             location,
             logo: logo?.secure_url || "",
-            logoId: logo?.id || ""
+            logoId: logo?.public_id || ""
         })
 
         generateToken(ngo._id, "ngo", res)

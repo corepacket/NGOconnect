@@ -42,7 +42,7 @@ export const registerUser = async (req, res) => {
             phoneNumber,
             address : req.body.address || "",
             profilePic: profilePic?.secure_url || "",
-            profilePicId: profilePic?.id || ""
+            profilePicId: profilePic?.public_id || ""
         })
 
         generateToken(user._id, "user", res)

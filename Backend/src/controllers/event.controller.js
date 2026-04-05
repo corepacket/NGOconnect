@@ -26,7 +26,7 @@ export const addEvent = async (req, res) => {
             location,
             date,
             image: image?.secure_url || "",
-            imageId: image?.id || "",
+            imageId: image?.public_id || "",
             ngoId: req.user._id,
             skillsRequired: skillsRequired || [],
             maxVolunteers
