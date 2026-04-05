@@ -1,6 +1,6 @@
 import express from 'express'
 import {upload} from "../middlewares/multer.middleware.js"
-import { registerUser, loginUser, logoutUser, volunteerForEvent } from '../controllers/user.controller.js';
+import { registerUser, loginUser, logoutUser } from '../controllers/user.controller.js';
 
 const router = express.Router()
 
