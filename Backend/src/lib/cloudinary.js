@@ -1,3 +1,5 @@
+import dotenv from 'dotenv'
+dotenv.config()
 import {v2 as cloudinary} from 'cloudinary'
 import fs from 'fs'
 
@@ -9,8 +11,6 @@ cloudinary.config({
 
 const uploadOnCloudinary = async(localFilePath) => {
     try{
-        console.log(process.env.CLOUDINARY_API_KEY)
-
         if(!localFilePath) return null
 
         const response = await cloudinary.uploader.upload(localFilePath,{resource_type:"auto"})
