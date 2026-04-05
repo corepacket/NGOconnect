@@ -4,6 +4,6 @@ import { addEvent, volunteerForEvent } from '../controllers/event.controller.js'
 const router = express.Router()
 
 router.post("/add-event",protectRoute,addEvent)
-router.post("/:id/volunteer",protectRoute,addEvent)
+router.post("/:id/volunteer",protectRoute,volunteerForEvent)
 
 export default router
