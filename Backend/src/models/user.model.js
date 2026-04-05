@@ -23,6 +23,12 @@ const userSchema = new mongoose.Schema(
         address: {
             type: String
         },
+        profilePic: {
+            type: String
+        },
+        profilePicId: {
+            type: String
+        },
         eventsRegistered: [
         {
             type: Schema.Types.ObjectId,
