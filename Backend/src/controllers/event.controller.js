@@ -1,3 +1,4 @@
+import { uploadOnCloudinary } from "../lib/cloudinary.js"
 import Event from "../models/event.model.js"
 
 export const addEvent = async (req, res) => {
@@ -12,11 +13,20 @@ export const addEvent = async (req, res) => {
             return res.status(400).json({message: "All fields are required"})
         }
 
+        let imageLocalPath
+        if(req.files.image && req.files.image[0]){
+            imageLocalPath = req.files.image[0].path
+        }
+
+        const image = imageLocalPath ? await uploadOnCloudinary(imageLocalPath) : null
+
         const event = await Event.create({
             title,
             description,
             location,
             date,
+            image: image?.secure_url || "",
+            imageId: image?.id || "",
             ngoId: req.user._id,
             skillsRequired: skillsRequired || [],
             maxVolunteers

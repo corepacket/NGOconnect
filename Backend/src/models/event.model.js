@@ -18,7 +18,12 @@ const eventSchema = new mongoose.Schema(
         type:Date,
         required:true
     },
-
+    image: {
+      type: String
+    },
+    imageId: {
+      type: String
+    },
     ngoId:{
         type:mongoose.Schema.Types.ObjectId,
         ref:"NGO",
