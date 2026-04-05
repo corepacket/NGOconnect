@@ -1,5 +1,6 @@
 import { uploadOnCloudinary } from "../lib/cloudinary.js"
 import Event from "../models/event.model.js"
+import User from "../models/user.model.js"
 
 export const addEvent = async (req, res) => {
     const {title, description, location, date, maxVolunteers, skillsRequired} = req.body
@@ -14,7 +15,7 @@ export const addEvent = async (req, res) => {
         }
 
         let imageLocalPath
-        if(req.files.image && req.files.image[0]){
+        if(req.files?.image && req.files?.image[0]){
             imageLocalPath = req.files.image[0].path
         }
 

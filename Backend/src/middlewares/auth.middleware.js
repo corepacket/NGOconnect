@@ -18,7 +18,7 @@ export const protectRoute = async (req,res,next) => {
 
         let account
         if(decoded.role=="user"){
-            const account = await User.findById(decoded.id).select("-password")
+            account = await User.findById(decoded.id).select("-password")
 
             if(!account){
                 return res.status(404).json({message: "User not found"})
@@ -26,7 +26,7 @@ export const protectRoute = async (req,res,next) => {
         }
         
         if(decoded.role=="ngo"){
-            const account = await NGO.findById(decoded.id).select("-password")
+            account = await NGO.findById(decoded.id).select("-password")
 
             if(!account){
                 return res.status(404).json({message: "NGO not found"})
