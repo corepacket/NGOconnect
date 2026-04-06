@@ -26,7 +26,7 @@ export const registerNGO = async(req, res) => {
         }
 
         let logoLocaPath
-        if(req.files.logo && req.files.logo[0]){
+        if(req.files?.logo && req.files?.logo[0]){
             logoLocaPath = req.files.logo[0].path
         }
 

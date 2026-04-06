@@ -26,7 +26,7 @@ export const registerUser = async (req, res) => {
         }
 
         let profilePicLocalPath
-        if(req.files.profilePic && req.files.profilePic[0]){
+        if(req.files?.profilePic && req.files?.profilePic[0]){
             profilePicLocalPath = req.files.profilePic[0].path
         }
 
