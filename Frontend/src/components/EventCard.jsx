@@ -21,7 +21,7 @@ const EventCard = ({ event }) => {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         <div className="absolute bottom-4 left-4 right-4">
-          <span className="inline-block px-3 py-1 bg-primary-600 text-white text-xs font-semibold rounded-full">
+          <span className="inline-block px-3 py-1 bg-gradient-to-r from-hope-600 to-compassion-600 text-white text-xs font-semibold rounded-full">
             {event.category}
           </span>
         </div>
@@ -40,15 +40,15 @@ const EventCard = ({ event }) => {
         {/* Details */}
         <div className="space-y-2 mb-4">
           <div className="flex items-center text-earth-500 text-sm">
-            <HiCalendar className="w-4 h-4 mr-2 text-primary-600" />
+            <HiCalendar className="w-4 h-4 mr-2 text-hope-600" />
             <span>{format(new Date(event.date), 'PPP')}</span>
           </div>
           <div className="flex items-center text-earth-500 text-sm">
-            <HiLocationMarker className="w-4 h-4 mr-2 text-primary-600" />
+            <HiLocationMarker className="w-4 h-4 mr-2 text-hope-600" />
             <span>{event.location || 'Location TBD'}</span>
           </div>
           <div className="flex items-center text-earth-500 text-sm">
-            <HiUserGroup className="w-4 h-4 mr-2 text-primary-600" />
+            <HiUserGroup className="w-4 h-4 mr-2 text-hope-600" />
             <span>
               {event.volunteers?.length || 0} / {event.maxVolunteers || '∞'} Volunteers
             </span>
@@ -62,13 +62,13 @@ const EventCard = ({ event }) => {
               {event.skillsRequired.slice(0, 3).map((skill, index) => (
                 <span
                   key={index}
-                  className="px-2 py-1 bg-earth-100 text-earth-700 text-xs rounded-md"
+                  className="px-2 py-1 bg-hope-100 text-hope-700 text-xs rounded-md"
                 >
                   {skill}
                 </span>
               ))}
               {event.skillsRequired.length > 3 && (
-                <span className="px-2 py-1 bg-earth-100 text-earth-700 text-xs rounded-md">
+                <span className="px-2 py-1 bg-hope-100 text-hope-700 text-xs rounded-md">
                   +{event.skillsRequired.length - 3}
                 </span>
               )}
@@ -79,7 +79,7 @@ const EventCard = ({ event }) => {
         {/* Button */}
         <Link
           to={`/events/${event._id}`}
-          className="block w-full text-center px-4 py-3 bg-gradient-to-r from-primary-600 to-secondary-600 text-white rounded-lg font-semibold hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
+          className="block w-full text-center px-4 py-3 bg-gradient-to-r from-hope-600 to-compassion-600 text-white rounded-lg font-semibold hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
         >
           View Details
         </Link>
