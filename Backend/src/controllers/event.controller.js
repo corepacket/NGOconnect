@@ -82,3 +82,23 @@ export const volunteerForEvent = async (req, res) => {
         return res.status(500).json({message: "Internal error in registering for event"})
     }
 }
+
+export const viewRegistrations = async (req, res) => {
+    try {
+        const eventId = req.params.id
+
+        const event = await Event.findById(eventId)
+            .populate("volunteers", "fullname") // only fetch fullname
+
+        if (!event) {
+            return res.status(400).json({ message: "Cannot find event" })
+        }
+
+        const usernames = event.volunteers.map(user => user.fullname)
+
+        return res.status(200).json({ usernames })
+    } catch (error) {
+        console.log(`Error in viewing registrations : ${error}`)
+        return res.status(500).json({ message: "Internal error in viewing registrations" })
+    }
+}
