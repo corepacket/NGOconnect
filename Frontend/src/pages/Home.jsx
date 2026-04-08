@@ -16,6 +16,7 @@ const Home = () => {
       skillsRequired: ['Teamwork', 'Physical Fitness'],
       volunteers: [1, 2, 3],
       maxVolunteers: 50,
+      location: 'Juhu Beach, Mumbai',
       image: 'https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
     },
     {
@@ -27,6 +28,7 @@ const Home = () => {
       skillsRequired: ['Teaching', 'Patience'],
       volunteers: [1, 2],
       maxVolunteers: 20,
+      location: 'Dharavi, Mumbai',
       image: 'https://images.unsplash.com/photo-1577896851231-70ef18881754?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
     },
     {
@@ -38,6 +40,7 @@ const Home = () => {
       skillsRequired: ['Medical Knowledge', 'First Aid'],
       volunteers: [1],
       maxVolunteers: 30,
+      location: 'Bandra West, Mumbai',
       image: 'https://images.unsplash.com/photo-1631815588090-d4bfec5b1ccb?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
     },
   ]
@@ -70,7 +73,7 @@ const Home = () => {
       <HeroSection />
 
       {/* Features Section */}
-      <section className="section-padding earth-pattern">
+      <section className="section-padding hope-pattern">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -80,7 +83,7 @@ const Home = () => {
             className="text-center mb-12"
           >
             <h2 className="text-3xl md:text-4xl font-display font-bold text-earth-900 mb-4">
-              Why Choose <span className="gradient-text">NGOConnect</span>?
+              Why Choose <span className="bg-gradient-to-r from-hope-600 to-compassion-600 bg-clip-text text-transparent">NGOConnect</span>?
             </h2>
             <p className="text-earth-600 max-w-2xl mx-auto">
               We bridge the gap between passionate volunteers and impactful NGOs
@@ -95,9 +98,9 @@ const Home = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 viewport={{ once: true }}
-                className="text-center p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow"
+                className="text-center p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-hope-100"
               >
-                <div className="inline-block p-3 bg-gradient-to-r from-primary-100 to-secondary-100 rounded-full text-primary-600 mb-4">
+                <div className="inline-block p-3 bg-gradient-to-r from-hope-100 to-compassion-100 rounded-full text-hope-600 mb-4">
                   {feature.icon}
                 </div>
                 <h3 className="text-lg font-semibold text-earth-900 mb-2">
@@ -113,7 +116,7 @@ const Home = () => {
       </section>
 
       {/* Featured Events */}
-      <section className="section-padding bg-white">
+      <section className="section-padding hope-pattern">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -123,7 +126,7 @@ const Home = () => {
             className="text-center mb-12"
           >
             <h2 className="text-3xl md:text-4xl font-display font-bold text-earth-900 mb-4">
-              Featured <span className="gradient-text">Events</span>
+              Featured <span className="bg-gradient-to-r from-compassion-600 to-secondary-600 bg-clip-text text-transparent">Events</span>
             </h2>
             <p className="text-earth-600 max-w-2xl mx-auto">
               Discover upcoming volunteer opportunities that match your interests
@@ -139,7 +142,7 @@ const Home = () => {
           <div className="text-center mt-12">
             <Link
               to="/events"
-              className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-primary-600 to-secondary-600 text-white rounded-lg font-semibold hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
+              className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-hope-600 to-compassion-600 text-white rounded-lg font-semibold hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-200"
             >
               View All Events
             </Link>
@@ -150,8 +153,9 @@ const Home = () => {
       {/* CTA Section */}
       <section className="relative py-20 overflow-hidden">
         <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80')] bg-cover bg-center" />
-          <div className="absolute inset-0 bg-gradient-to-r from-primary-900/95 to-secondary-900/95" />
+          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1559027615-cd4628902d4a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80')] bg-cover bg-center" />
+          <div className="absolute inset-0 bg-gradient-to-r from-hope-900/90 via-compassion-900/85 to-secondary-900/90" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
         </div>
 
         <div className="relative z-10 max-w-4xl mx-auto text-center px-4">
@@ -162,7 +166,7 @@ const Home = () => {
             viewport={{ once: true }}
           >
             <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-4">
-              Ready to Make a Difference?
+              Ready to Make a <span className="text-transparent bg-clip-text bg-gradient-to-r from-hope-300 to-compassion-300">Difference</span>?
             </h2>
             <p className="text-xl text-white/80 mb-8">
               Join thousands of volunteers making an impact in their communities
@@ -170,7 +174,7 @@ const Home = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 to="/register"
-                className="px-8 py-4 bg-white text-primary-600 rounded-lg font-semibold hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-200"
+                className="px-8 py-4 bg-white text-hope-600 rounded-lg font-semibold hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-200"
               >
                 Sign Up as Volunteer
               </Link>

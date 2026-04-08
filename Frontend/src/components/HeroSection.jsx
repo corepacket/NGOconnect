@@ -14,30 +14,55 @@ const HeroSection = () => {
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background with overlay */}
       <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1594708767771-a7502209ff51?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80')] bg-cover bg-center bg-fixed" />
-        <div className="absolute inset-0 bg-gradient-to-br from-earth-900/95 via-primary-900/90 to-secondary-900/90" />
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80')] bg-cover bg-center bg-fixed" />
+        <div className="absolute inset-0 bg-gradient-to-br from-earth-900/85 via-primary-900/80 to-secondary-900/85" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
       </div>
 
       {/* Animated particles */}
       <div className="absolute inset-0 overflow-hidden">
-        {[...Array(20)].map((_, i) => (
+        {[...Array(30)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-2 h-2 bg-white/20 rounded-full"
+            className="absolute w-1 h-1 bg-white/15 rounded-full"
             initial={{
               x: Math.random() * window.innerWidth,
               y: Math.random() * window.innerHeight,
             }}
             animate={{
-              y: [null, -30, 30, -30],
-              x: [null, 30, -30, 30],
+              y: [null, -50, 50, -50],
+              x: [null, 50, -50, 50],
+              opacity: [0.2, 0.8, 0.2],
             }}
             transition={{
-              duration: Math.random() * 10 + 10,
+              duration: Math.random() * 15 + 15,
               repeat: Infinity,
-              ease: "linear"
+              ease: "easeInOut"
             }}
           />
+        ))}
+        {[...Array(8)].map((_, i) => (
+          <motion.div
+            key={`heart-${i}`}
+            className="absolute text-white/10"
+            initial={{
+              x: Math.random() * window.innerWidth,
+              y: window.innerHeight + 50,
+            }}
+            animate={{
+              y: [-50, -window.innerHeight - 50],
+              x: [null, Math.random() * 200 - 100],
+              rotate: [0, 360],
+            }}
+            transition={{
+              duration: Math.random() * 20 + 20,
+              repeat: Infinity,
+              ease: "linear",
+              delay: Math.random() * 10,
+            }}
+          >
+            <FaHeart className="w-4 h-4" />
+          </motion.div>
         ))}
       </div>
 

@@ -14,7 +14,7 @@ const Events = () => {
       skillsRequired: ['Teamwork', 'Physical Fitness', 'Environmental Awareness'],
       volunteers: [1, 2, 3],
       maxVolunteers: 50,
-      location: 'Miami Beach, FL',
+      location: 'Juhu Beach, Mumbai',
       image: 'https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
     },
     {
@@ -26,7 +26,7 @@ const Events = () => {
       skillsRequired: ['Teaching', 'Patience', 'Communication'],
       volunteers: [1, 2],
       maxVolunteers: 20,
-      location: 'Community Center, Austin',
+      location: 'Dharavi, Mumbai',
       image: 'https://images.unsplash.com/photo-1577896851231-70ef18881754?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
     },
     {
@@ -38,7 +38,7 @@ const Events = () => {
       skillsRequired: ['Medical Knowledge', 'First Aid', 'Empathy'],
       volunteers: [1],
       maxVolunteers: 30,
-      location: 'Rural Health Center',
+      location: 'Bandra West, Mumbai',
       image: 'https://images.unsplash.com/photo-1631815588090-d4bfec5b1ccb?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
     },
     {
@@ -50,7 +50,7 @@ const Events = () => {
       skillsRequired: ['Animal Care', 'Patience', 'Physical Fitness'],
       volunteers: [1, 2, 3, 4],
       maxVolunteers: 15,
-      location: 'City Animal Shelter',
+      location: 'Andheri, Mumbai',
       image: 'https://images.unsplash.com/photo-1601758125946-6ec2ef64daf8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
     },
   ])
