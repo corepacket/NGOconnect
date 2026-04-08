@@ -63,6 +63,10 @@ export const volunteerForEvent = async (req, res) => {
         if(event.volunteers.length == event.maxVolunteers){
             return res.status(400).json({message: "No more volunteers needed for this event"})
         }
+        
+        const user = await User.findById(userId)
+        user.eventsRegistered.push(event._id)
+        await user.save()
 
         event.volunteers.push(userId)
         await event.save()
