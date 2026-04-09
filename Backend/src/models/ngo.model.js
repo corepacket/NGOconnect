@@ -24,6 +24,14 @@ const ngoSchema = new mongoose.Schema(
             type: String,
             required: true
         },
+        website: {
+            type: String,
+            required: true
+        },
+        briefDescription: {
+            type: String,
+            required: true
+        },
         logo: {
             type: String
         },

@@ -1,13 +1,12 @@
 import bcrypt from "bcryptjs"
 import User from "../models/user.model.js"
-import Event from "../models/event.model.js"
 import {generateToken} from "../lib/utils.js"
 import { uploadOnCloudinary } from "../lib/cloudinary.js"
 
 export const registerUser = async (req, res) => {
-    const {fullname, email, password, phoneNumber} = req.body
+    const {fullname, email, password, phoneNumber, skillsPossessed} = req.body
     try{
-        if(!fullname || !email || !password || !phoneNumber){
+        if(!fullname || !email || !password || !phoneNumber || !skillsPossessed){
             return res.status(400).json({message:"All fields are required"})
         }
 
@@ -25,12 +24,12 @@ export const registerUser = async (req, res) => {
             return res.status(400).json({message: "Phone number should be of 10 digits"})
         }
 
-        let profilePicLocalPath
-        if(req.files?.profilePic && req.files?.profilePic[0]){
-            profilePicLocalPath = req.files.profilePic[0].path
-        }
+        const profilePicLocalPath = req.files.profilePic[0].path
+        const profilePic = await uploadOnCloudinary(profilePicLocalPath)
 
-        const profilePic = profilePicLocalPath? await uploadOnCloudinary(profilePicLocalPath): null
+        if(!profilePic){
+            return res.status(400).json({message: "Profile pic is required"})
+        }
 
         const salt = await bcrypt.genSalt(10)
         const hashedPassword = await bcrypt.hash(password, salt)
@@ -41,8 +40,9 @@ export const registerUser = async (req, res) => {
             password: hashedPassword,
             phoneNumber,
             address : req.body.address || "",
-            profilePic: profilePic?.secure_url || "",
-            profilePicId: profilePic?.public_id || ""
+            profilePic: profilePic.secure_url,
+            profilePicId: profilePic.public_id,
+            skillsPossessed: skillsPossessed
         })
 
         generateToken(user._id, "user", res)
