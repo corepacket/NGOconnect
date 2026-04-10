@@ -4,10 +4,10 @@ import NGO from "../models/ngo.model.js"
 import { uploadOnCloudinary } from "../lib/cloudinary.js"
 
 export const registerNGO = async(req, res) => {
-    const {name, email, password, contactNumber, location} = req.body
+    const {name, email, password, contactNumber, location, website, briefDescription} = req.body
 
     try{
-        if(!name || !email || !password || !contactNumber || !location){
+        if(!name || !email || !password || !contactNumber || !location || !website || !briefDescription){
             return res.status(400).json({message: "All fields are required"})
         }
 
@@ -41,6 +41,8 @@ export const registerNGO = async(req, res) => {
             password: hashedPassword,
             contactNumber,
             location,
+            website,
+            briefDescription,
             logo: logo?.secure_url || "",
             logoId: logo?.public_id || ""
         })

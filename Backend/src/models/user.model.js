@@ -24,11 +24,19 @@ const userSchema = new mongoose.Schema(
             type: String
         },
         profilePic: {
-            type: String
+            type: String,
+            required: true
         },
         profilePicId: {
-            type: String
+            type: String,
+            required: true
         },
+        skillsPossessed: [
+            {
+                type: String,
+                required: true
+            }
+        ],
         eventsRegistered: [
         {
             type: Schema.Types.ObjectId,

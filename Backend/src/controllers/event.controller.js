@@ -1,16 +1,17 @@
 import { uploadOnCloudinary } from "../lib/cloudinary.js"
 import Event from "../models/event.model.js"
 import User from "../models/user.model.js"
+import NGO from "../models/ngo.model.js"
 
 export const addEvent = async (req, res) => {
-    const {title, description, location, date, maxVolunteers, skillsRequired} = req.body
+    const {title, description, location, date, timings, maxVolunteers, skillsRequired} = req.body
 
     try{
         if(req.role != "ngo"){
             return res.status(403).json({message: "Only NGOs can add events"})
         }
 
-        if(!title || !description || !location || !date || !maxVolunteers){
+        if(!title || !description || !location || !date || !timings || !maxVolunteers){
             return res.status(400).json({message: "All fields are required"})
         }
 
@@ -26,6 +27,7 @@ export const addEvent = async (req, res) => {
             description,
             location,
             date,
+            timings,
             image: image?.secure_url || "",
             imageId: image?.public_id || "",
             ngoId: req.user._id,
@@ -63,6 +65,10 @@ export const volunteerForEvent = async (req, res) => {
         if(event.volunteers.length == event.maxVolunteers){
             return res.status(400).json({message: "No more volunteers needed for this event"})
         }
+        
+        const user = await User.findById(userId)
+        user.eventsRegistered.push(event._id)
+        await user.save()
 
         event.volunteers.push(userId)
         await event.save()
@@ -76,5 +82,37 @@ export const volunteerForEvent = async (req, res) => {
     catch(error){
         console.log(`Error in registering for event : ${error}`)
         return res.status(500).json({message: "Internal error in registering for event"})
+    }
+}
+
+export const viewRegistrations = async (req, res) => {
+    try {
+        if (req.role !== "ngo") {
+            return res.status(403).json({ message: "Only NGOs can view registrations" })
+        }
+
+        const eventId = req.params.id
+
+        const event = await Event.findById(eventId)
+            .populate("volunteers", "fullname email")
+
+        if (!event) {
+            return res.status(400).json({ message: "Cannot find event" })
+        }
+        
+        if (event.ngoId.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: "Not authorized" })
+        }
+
+        const volunteers = event.volunteers.map(user => ({
+            name: user.fullname,
+            email: user.email
+        }))
+
+        return res.status(200).json({ volunteers })
+
+    } catch (error) {
+        console.log(`Error in viewing registrations : ${error}`)
+        return res.status(500).json({ message: "Internal error in viewing registrations" })
     }
 }
