@@ -1,4 +1,7 @@
-import Registration from "../models/registration.model"
+import Registration from "../models/registration.model.js"
+import Event from "../models/event.model.js"
+import User from "../models/user.model.js"
+import NGO from "../models/ngo.model.js"
 
 export const volunteerForEvent = async (req, res) => {
     try{

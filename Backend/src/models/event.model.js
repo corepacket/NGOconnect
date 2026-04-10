@@ -54,7 +54,6 @@ const eventSchema = new mongoose.Schema(
 }, {timestamps: true});
 
 eventSchema.index({location:1});
-eventSchema.index({category:1});
 eventSchema.index({ skillsRequired: 1 });
 
 const Event = mongoose.model("Event",eventSchema)

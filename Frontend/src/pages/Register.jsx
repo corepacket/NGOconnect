@@ -5,10 +5,15 @@ import { FaHandsHelping } from 'react-icons/fa'
 import { HiMail, HiLockClosed, HiUser, HiPhone, HiEye, HiEyeOff } from 'react-icons/hi'
 import toast from 'react-hot-toast'
 import { useAuth } from '../auth/AuthContext'
+import { registerVolunteer } from '../service/auth.service'
+
+
+
 
 const Register = () => {
   const navigate = useNavigate()
   const { login } = useAuth()
+  const[selectedFile,setSelectedFile]=useState(null)
   const [showPassword, setShowPassword] = useState(false)
   const [formData, setFormData] = useState({
     fullName: '',
@@ -18,6 +23,9 @@ const Register = () => {
     confirmPassword: '',
     agreeToTerms: false,
   })
+
+
+
   const [isLoading, setIsLoading] = useState(false)
 
   const handleChange = (e) => {
@@ -43,26 +51,38 @@ const Register = () => {
       setIsLoading(false)
       return
     }
+    try{
+      const fd = new FormData()
+      fd.append('fullname', formData.fullName)
+      fd.append('email', formData.email)
+      fd.append('password', formData.password)
+      fd.append('phoneNumber', formData.phone)
+      fd.append('skillsPossessed', 'Teaching') // later dynamic
+      if (selectedFile) {
+        fd.append('profilePic', selectedFile)
+      }
+      const res = await registerVolunteer(fd)
 
-    // Simulate API call - replace with actual auth logic
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    
+
+    
 
     login({
       userType: 'volunteer',
-      user: {
-        name: formData.fullName,
-        email: formData.email,
-        phone: formData.phone,
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-        memberSince: new Date().toLocaleString('default', { month: 'long', year: 'numeric' }),
-        totalHours: 0,
-        eventsAttended: 0,
-      },
+      user: res,
     })
     toast.success('Account created successfully! Welcome to NGOConnect.')
     navigate('/dashboard/volunteer')
     setIsLoading(false)
+  }catch(err){
+    console.log(err)
+    toast.error(err.response?.data?.message || 'Registeration failed')
+
   }
+  finally{
+    setIsLoading(false)
+  }
+}
 
   return (
     <div className="min-h-screen bg-earth-50 pt-24 pb-16">
@@ -154,6 +174,21 @@ const Register = () => {
                 />
               </div>
             </div>
+            {/* Profile image*/}
+
+            <div>
+              <label  className="block text-sm font-medium text-earth-700 mb-2">
+              Profile Photo</label>
+
+              <input 
+              type="file"
+              accept='image/*'
+              onChange={(e)=>setSelectedFile(e.target.files[0])}
+               className="w-full border border-earth-200 rounded-lg p-2"
+               />
+            </div>
+
+
 
             {/* Password */}
             <div>

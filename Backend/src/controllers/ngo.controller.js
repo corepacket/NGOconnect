@@ -50,7 +50,7 @@ export const registerNGO = async(req, res) => {
         generateToken(ngo._id, "ngo", res)
 
         return res.status(201).json({
-            _id: ngo._is,
+            _id: ngo._id,
             name: ngo.name,
             email: ngo.email,
             contactNumber: ngo.contactNumber

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { FaHandsHelping } from 'react-icons/fa'
 import { useAuth } from '../auth/AuthContext'
+import { registerNGO } from '../service/auth.service'
 import {
   HiMail,
   HiLockClosed,
@@ -19,6 +20,7 @@ const RegisterNGO = () => {
   const navigate = useNavigate()
   const { login } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
+  const [selectedFile, setSelectedFile]=useState(null)
   const [formData, setFormData] = useState({
     organizationName: '',
     contactName: '',
@@ -56,24 +58,40 @@ const RegisterNGO = () => {
       setIsLoading(false)
       return
     }
+    try{
+      const fd= new FormData()
+      {
+        fd.append("name", formData.organizationName)
+        fd.append("email", formData.email)
+        fd.append("contactNumber", formData.phone)
+        fd.append("location", formData.address)
+        fd.append("website", formData.website)
+        fd.append("briefDescription", formData.description)
+        fd.append("password", formData.password)
 
-    // Simulate API call - replace with actual auth logic
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+        if(selectedFile){
+          fd.append("logo",selectedFile)
+        }
+        const res=await registerNGO(fd)
+
+      
+
 
     login({
       userType: 'ngo',
-      user: {
-        name: formData.organizationName,
-        email: formData.email,
-        logo: 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-        eventsCount: 0,
-        totalVolunteers: 0,
-        pendingApplications: 0,
-      },
+      user: res
     })
     toast.success('NGO registered successfully! Welcome to NGOConnect.')
     navigate('/dashboard/ngo')
     setIsLoading(false)
+  }
+}catch (err) {
+    console.error(err)
+    toast.error(err.response?.data?.message || 'Registration failed')
+  } finally {
+    setIsLoading(false)
+  }
+
   }
 
   return (
