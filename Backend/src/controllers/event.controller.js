@@ -41,3 +41,30 @@ export const addEvent = async (req, res) => {
     }
 }
 
+export const viewEvent = async(req, res) => {
+    try{
+        const eventId = req.params.eventId
+
+        const event = await Event.findById(eventId)
+        if(!event){
+            return res.status(400).json({message: "Event not found"})
+        }
+
+        return res.status(200).json(event)
+    }
+    catch(error){
+        console.log(`Error in viewing event : ${error}`)
+        return res.status(500).json({message: 'Internal error in viewing event'})
+    }
+}
+
+export const viewAllEvents = async(_, res) => {
+    try{
+        const events = await Event.find()
+        return res.status(200).json(events)
+    }
+    catch(error){
+        console.log(`Error in viewing events : ${error}`)
+        return res.status(500).json({message: 'Internal error in viewing events'})
+    }
+}

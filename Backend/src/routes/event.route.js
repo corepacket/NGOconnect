@@ -6,6 +6,8 @@ import { upload } from '../middlewares/multer.middleware.js'
 const router = express.Router()
 
 router.post("/add-event",protectRoute,upload.fields([{name: "image", maxCount: 1}]),addEvent)
+// router.get("/:eventId/view",viewEvent)
+// router.get("/view-events",viewAllEvents)
 router.post("/:eventId/volunteer",protectRoute,volunteerForEvent)
 router.get("/:eventId/view-registrations",protectRoute,viewEventRegistrations)
 router.patch("/:eventId/registrations/:userId/accept",protectRoute,acceptRegistration)

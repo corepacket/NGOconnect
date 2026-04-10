@@ -7,7 +7,7 @@ export const volunteerForEvent = async (req, res) => {
             return res.status(403).json({message: "Only users can register for events"})
         }
 
-        const eventId = req.params.id
+        const eventId = req.params.eventId
         const event = await Event.findById(eventId)
 
         const userId = req.user._id
@@ -47,7 +47,7 @@ export const viewEventRegistrations = async (req, res) => {
             return res.status(403).json({ message: "Only NGOs can view registrations" })
         }
 
-        const eventId = req.params.id
+        const eventId = req.params.eventIdd
 
         const event = await Event.findById(eventId)
             .populate("volunteers", "fullname email")
