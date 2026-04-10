@@ -14,6 +14,7 @@ import {
 import { FaHandsHelping } from 'react-icons/fa'
 import { format } from 'date-fns'
 import EventCard from '../components/EventCard'
+import VolunteerList from '../components/VolunteerList'
 
 const EventDetails = () => {
   const { id } = useParams()
@@ -388,6 +389,16 @@ const EventDetails = () => {
                   ))}
                 </ul>
               </div>
+            </motion.div>
+
+            {/* Registered Volunteers */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+              className="bg-white rounded-2xl shadow-lg p-6"
+            >
+              <VolunteerList volunteers={event.volunteers} maxVolunteers={event.maxVolunteers} />
             </motion.div>
 
             </div>
