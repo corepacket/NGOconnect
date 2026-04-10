@@ -37,13 +37,7 @@ const ngoSchema = new mongoose.Schema(
         },
         logoId: {
             type: String
-        },
-        eventsPosted: [
-        {
-            type: Schema.Types.ObjectId,
-            ref: "Event"
         }
-    ],
     }, {timestamps: true}
 )
 

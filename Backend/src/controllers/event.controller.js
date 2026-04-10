@@ -1,7 +1,5 @@
 import { uploadOnCloudinary } from "../lib/cloudinary.js"
 import Event from "../models/event.model.js"
-import User from "../models/user.model.js"
-import NGO from "../models/ngo.model.js"
 
 export const addEvent = async (req, res) => {
     const {title, description, location, date, timings, maxVolunteers, skillsRequired} = req.body

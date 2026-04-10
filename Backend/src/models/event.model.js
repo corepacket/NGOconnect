@@ -43,14 +43,7 @@ const eventSchema = new mongoose.Schema(
   maxVolunteers: {
     type: Number,
     required: true
-  },
-
-  volunteers: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User"
-    }
-  ],
+  }
 }, {timestamps: true});
 
 eventSchema.index({location:1});

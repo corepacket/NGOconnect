@@ -1,4 +1,5 @@
-import Registration from "../models/registration.model"
+import Registration from "../models/registration.model.js"
+import User from "../models/user.model.js"
 
 export const volunteerForEvent = async (req, res) => {
     try{
@@ -22,19 +23,16 @@ export const volunteerForEvent = async (req, res) => {
         if(event.volunteers.length == event.maxVolunteers){
             return res.status(400).json({message: "No more volunteers needed for this event"})
         }
-        
-        const user = await User.findById(userId)
-        user.eventsRegistered.push(event._id)
-        await user.save()
 
-        event.volunteers.push(userId)
-        await event.save()
-        
-        await User.findByIdAndUpdate(userId, {
-            $addToSet: { eventsRegistered: eventId }
+        const message = req.body
+
+        await Registration.create({
+            userId,
+            eventId,
+            message,
         })
-        
-        return res.status(200).json(user)
+
+        return res.status(200).json({message: "Registration successfully completed and sent for approval"})
     }
     catch(error){
         console.log(`Error in registering for event : ${error}`)
@@ -42,7 +40,7 @@ export const volunteerForEvent = async (req, res) => {
     }
 }
 
-export const viewRegistrations = async (req, res) => {
+export const viewEventRegistrations = async (req, res) => {
     try {
         if (req.role !== "ngo") {
             return res.status(403).json({ message: "Only NGOs can view registrations" })
@@ -57,16 +55,14 @@ export const viewRegistrations = async (req, res) => {
             return res.status(400).json({ message: "Cannot find event" })
         }
         
-        if (event.ngoId.toString() !== req.user._id.toString()) {
-            return res.status(403).json({ message: "Not authorized" })
+        if (!event.ngoId.equals(req.user._id)) {
+            return res.status(403).json({ message: "Not authorized" });
         }
 
-        const volunteers = event.volunteers.map(user => ({
-            name: user.fullname,
-            email: user.email
-        }))
+        const registrations = await Registration.find({ event: event._id })
+        .populate("user", "fullName profilePic");
 
-        return res.status(200).json({ volunteers })
+        return res.status(200).json(registrations)
 
     } catch (error) {
         console.log(`Error in viewing registrations : ${error}`)
