@@ -55,6 +55,27 @@ const EventCard = ({ event }) => {
           </div>
         </div>
 
+        {/* Volunteer Preview */}
+        {event.volunteers && event.volunteers.length > 0 && (
+          <div className="mb-4">
+            <div className="flex items-center gap-2">
+              <div className="flex -space-x-2">
+                {event.volunteers.slice(0, 3).map((volunteer, index) => (
+                  <img
+                    key={volunteer.id || index}
+                    src={volunteer.avatar || `https://images.unsplash.com/photo-${1507003211169 + index}-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80`}
+                    alt={volunteer.name}
+                    className="w-8 h-8 rounded-full object-cover border-2 border-white"
+                  />
+                ))}
+              </div>
+              <span className="text-sm text-earth-600">
+                {event.volunteers.length} volunteer{event.volunteers.length !== 1 ? 's' : ''} registered
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Skills */}
         {event.skillsRequired && event.skillsRequired.length > 0 && (
           <div className="mb-4">

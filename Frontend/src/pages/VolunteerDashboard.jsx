@@ -12,6 +12,8 @@ import {
   HiMail,
   HiPhone,
   HiLogout,
+  HiX,
+  HiSave,
 } from 'react-icons/hi'
 import { FaHandsHelping } from 'react-icons/fa'
 import { useAuth } from '../auth/AuthContext'
@@ -21,15 +23,40 @@ const VolunteerDashboard = () => {
   const { auth, logout } = useAuth()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('overview')
+  const [showEditProfile, setShowEditProfile] = useState(false)
+  
+  const [profileData, setProfileData] = useState({
+    name: auth?.user?.name || 'Volunteer',
+    email: auth?.user?.email || 'volunteer@example.com',
+    phone: auth?.user?.phone || '+1 234 567 890',
+    bio: '',
+    skills: [],
+    availability: 'weekends',
+    interests: [],
+    memberSince: auth?.user?.memberSince || new Date('2023-01-15').toLocaleString('default', { month: 'long', year: 'numeric' }),
+  })
 
-  const user = auth?.user ?? {
-    name: 'Volunteer',
-    email: 'volunteer@example.com',
-    phone: '+1 234 567 890',
+  const availableSkills = [
+    'Teaching', 'Healthcare', 'Environmental Conservation', 'Animal Care',
+    'Event Management', 'Fundraising', 'Social Media', 'Web Development',
+    'Graphic Design', 'Photography', 'Writing', 'Public Speaking',
+    'First Aid', 'Counseling', 'Legal Aid', 'Research'
+  ]
+
+  const interests = [
+    'Education', 'Healthcare', 'Environment', 'Animal Welfare',
+    'Elderly Care', 'Youth Development', 'Arts & Culture', 'Sports',
+    'Technology', 'Community Service', 'Disaster Relief', 'Human Rights'
+  ]
+
+  const user = {
+    name: profileData.name,
+    email: profileData.email,
+    phone: profileData.phone,
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-    memberSince: new Date().toLocaleString('default', { month: 'long', year: 'numeric' }),
-    totalHours: 48,
-    eventsAttended: 12,
+    memberSince: profileData.memberSince,
+    totalHours: auth?.user?.totalHours || 48,
+    eventsAttended: auth?.user?.eventsAttended || 12,
   }
 
   const registeredEvents = [
@@ -93,6 +120,32 @@ const VolunteerDashboard = () => {
     navigate('/')
   }
 
+  const handleProfileUpdate = (e) => {
+    e.preventDefault()
+    // Here you would typically make an API call to update the profile
+    console.log('Updating profile:', profileData)
+    toast.success('Profile updated successfully!')
+    setShowEditProfile(false)
+  }
+
+  const handleSkillToggle = (skill) => {
+    setProfileData(prev => ({
+      ...prev,
+      skills: prev.skills.includes(skill)
+        ? prev.skills.filter(s => s !== skill)
+        : [...prev.skills, skill]
+    }))
+  }
+
+  const handleInterestToggle = (interest) => {
+    setProfileData(prev => ({
+      ...prev,
+      interests: prev.interests.includes(interest)
+        ? prev.interests.filter(i => i !== interest)
+        : [...prev.interests, interest]
+    }))
+  }
+
   return (
     <div className="min-h-screen bg-earth-50 pt-24 pb-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -146,7 +199,10 @@ const VolunteerDashboard = () => {
                 </div>
               </div>
             </div>
-            <button className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+            <button 
+              onClick={() => setShowEditProfile(true)}
+              className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+            >
               Edit Profile
             </button>
           </div>
@@ -221,29 +277,6 @@ const VolunteerDashboard = () => {
                         </div>
                       </div>
                     ))}
-                </div>
-              </div>
-              <div className="bg-white rounded-2xl shadow-lg p-6">
-                <h3 className="text-xl font-display font-semibold text-earth-900 mb-4">Recommended for You</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {savedEvents.map((event) => (
-                    <div key={event.id} className="p-4 border border-earth-200 rounded-xl hover:shadow-md transition-shadow">
-                      <h4 className="font-semibold text-earth-900 mb-1">{event.title}</h4>
-                      <p className="text-sm text-earth-600 mb-2">{event.organization}</p>
-                      <div className="flex items-center text-sm text-earth-500">
-                        <HiCalendar className="w-4 h-4 mr-1" />
-                        <span>{new Date(event.date).toLocaleDateString()}</span>
-                        <HiLocationMarker className="w-4 h-4 ml-3 mr-1" />
-                        <span>{event.location}</span>
-                      </div>
-                      <Link
-                        to="/events"
-                        className="mt-3 block w-full text-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm"
-                      >
-                        View Event
-                      </Link>
-                    </div>
-                  ))}
                 </div>
               </div>
             </div>
@@ -331,6 +364,169 @@ const VolunteerDashboard = () => {
             </div>
           )}
         </motion.div>
+
+        {/* Edit Profile Modal */}
+        {showEditProfile && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            >
+              <div className="p-6 border-b border-earth-200">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-bold text-earth-900">Edit Profile</h2>
+                  <button
+                    onClick={() => setShowEditProfile(false)}
+                    className="p-2 hover:bg-earth-100 rounded-lg transition-colors"
+                  >
+                    <HiX className="w-5 h-5 text-earth-600" />
+                  </button>
+                </div>
+              </div>
+
+              <form onSubmit={handleProfileUpdate} className="p-6 space-y-6">
+                {/* Basic Information */}
+                <div>
+                  <h3 className="text-lg font-semibold text-earth-900 mb-4">Basic Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-earth-700 mb-2">Name</label>
+                      <input
+                        type="text"
+                        value={profileData.name}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
+                        className="w-full px-4 py-2 border border-earth-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-earth-700 mb-2">Email</label>
+                      <input
+                        type="email"
+                        value={profileData.email}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
+                        className="w-full px-4 py-2 border border-earth-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-earth-700 mb-2">Phone</label>
+                      <input
+                        type="tel"
+                        value={profileData.phone}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, phone: e.target.value }))}
+                        className="w-full px-4 py-2 border border-earth-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-earth-700 mb-2">Availability</label>
+                      <select
+                        value={profileData.availability}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, availability: e.target.value }))}
+                        className="w-full px-4 py-2 border border-earth-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      >
+                        <option value="weekdays">Weekdays</option>
+                        <option value="weekends">Weekends</option>
+                        <option value="flexible">Flexible</option>
+                        <option value="evenings">Evenings</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-earth-700 mb-2">Member Since</label>
+                    <input
+                      type="text"
+                      value={profileData.memberSince}
+                      onChange={(e) => setProfileData(prev => ({ ...prev, memberSince: e.target.value }))}
+                      className="w-full px-4 py-2 border border-earth-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-earth-50"
+                      readOnly
+                    />
+                  </div>
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-earth-700 mb-2">Bio</label>
+                    <textarea
+                      value={profileData.bio}
+                      onChange={(e) => setProfileData(prev => ({ ...prev, bio: e.target.value }))}
+                      rows={3}
+                      className="w-full px-4 py-2 border border-earth-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      placeholder="Tell us about yourself and your volunteering interests..."
+                    />
+                  </div>
+                </div>
+
+                {/* Skills Section */}
+                <div>
+                  <h3 className="text-lg font-semibold text-earth-900 mb-4">Skills</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {availableSkills.map((skill) => (
+                      <label
+                        key={skill}
+                        className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
+                          profileData.skills.includes(skill)
+                            ? 'border-primary-500 bg-primary-50'
+                            : 'border-earth-200 hover:border-earth-300'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={profileData.skills.includes(skill)}
+                          onChange={() => handleSkillToggle(skill)}
+                          className="sr-only"
+                        />
+                        <span className="text-sm font-medium">{skill}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Interests Section */}
+                <div>
+                  <h3 className="text-lg font-semibold text-earth-900 mb-4">Areas of Interest</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {interests.map((interest) => (
+                      <label
+                        key={interest}
+                        className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
+                          profileData.interests.includes(interest)
+                            ? 'border-primary-500 bg-primary-50'
+                            : 'border-earth-200 hover:border-earth-300'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={profileData.interests.includes(interest)}
+                          onChange={() => handleInterestToggle(interest)}
+                          className="sr-only"
+                        />
+                        <span className="text-sm font-medium">{interest}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-4 pt-4 border-t border-earth-200">
+                  <button
+                    type="submit"
+                    className="flex-1 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <HiSave className="w-5 h-5" />
+                    Save Changes
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowEditProfile(false)}
+                    className="px-6 py-3 border border-earth-200 text-earth-600 rounded-lg hover:bg-earth-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
       </div>
     </div>
   )

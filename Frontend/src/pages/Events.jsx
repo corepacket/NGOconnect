@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import SearchFilters from '../components/SearchFilters'
 import EventCard from '../components/EventCard'
 import { motion } from 'framer-motion'
 
@@ -55,16 +54,6 @@ const Events = () => {
     },
   ])
 
-  const handleSearch = (term) => {
-    // Implement search logic
-    console.log('Searching for:', term)
-  }
-
-  const handleFilter = (filters) => {
-    // Implement filter logic
-    console.log('Applying filters:', filters)
-  }
-
   return (
     <div className="min-h-screen bg-earth-50 pt-24 pb-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -82,9 +71,6 @@ const Events = () => {
             Find events that match your skills and interests. Make a difference in your community.
           </p>
         </motion.div>
-
-        {/* Search and Filters */}
-        <SearchFilters onSearch={handleSearch} onFilter={handleFilter} />
 
         {/* Events Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
