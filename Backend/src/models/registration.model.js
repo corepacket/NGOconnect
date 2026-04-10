@@ -16,11 +16,13 @@ const registrationSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ["pending", "approved", "rejected"],
-    default: "pending"
+    default: "pending",
+    required: true
   },
 
   message: {
-    type: String 
+    type: String,
+    required: true
   },
 
   appliedAt: {
