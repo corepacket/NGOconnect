@@ -16,8 +16,17 @@ export const volunteerForEvent = async (req, res) => {
             return res.status(404).json({message: "Event not found"})
         }
 
-        if(event.volunteers.includes(userId)){
-            return res.status(400).json({message: "Already registered for current event"})
+        const existing = await Registration.findOne({userId: userId, eventId: eventId})
+        if(existing){
+            if(existing.status=="rejected"){
+                return res.status(400).json({message: "Application rejected"})
+            }
+            else if(existing.status=="approved"){
+                return res.status(400).json({message: "Already registered"})
+            }
+            else{
+                return res.status(400).json({message: "Approval of registration pending"})
+            }
         }
 
         const approvedRegs = await Registration.find({eventId: eventId, status: "approved"})
@@ -25,7 +34,7 @@ export const volunteerForEvent = async (req, res) => {
             return res.status(400).json({message: "No more volunteers needed for this event"})
         }
 
-        const message = req.body
+        const {message} = req.body
 
         await Registration.create({
             userId,
@@ -50,7 +59,7 @@ export const viewEventRegistrations = async (req, res) => {
         const eventId = req.params.eventIdd
 
         const event = await Event.findById(eventId)
-            .populate("volunteers", "fullname email")
+        .populate("volunteers", "fullname email")
 
         if (!event) {
             return res.status(400).json({ message: "Cannot find event" })
