@@ -32,7 +32,14 @@ const pastEventSchema = new mongoose.Schema(
         type:mongoose.Schema.Types.ObjectId,
         ref:"NGO",
         required:true
-    }
+    },
+    volunteers: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        required: true
+      }
+    ]
 }, {timestamps: true})
 
 pastEventSchema.index({location:1});

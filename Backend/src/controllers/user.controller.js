@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs"
 import User from "../models/user.model.js"
 import Event from "../models/event.model.js"
+import PastEvent from "../models/past.event.model.js"
 import {generateToken} from "../lib/utils.js"
 import { uploadOnCloudinary } from "../lib/cloudinary.js"
 
@@ -153,5 +154,26 @@ export const viewSavedEvents = async(req, res) => {
     catch(error){
         console.log(`Error in viewing saved events : ${error}`)
         return res.status(500).json({message: "Internal error in viewing saved events"})
+    }
+}
+
+export const viewHistory = async(req, res) => {
+    try{
+        if(req.role!="user"){
+            return res.status(403).json({message: "Only users can view history"})
+        }
+
+        const events = await PastEvent.find({volunteers: req.user._id}, "-volunteers")
+
+        if(events.length==0){
+            return res.status(200).json({message: "Not participated in any events yet"})
+        }
+        else{
+            return res.status(200).json(events)
+        }
+    }
+    catch(error){
+        console.log(`Error in viewing history : ${error}`)
+        return res.status(500).json({message: "Internal error in viewing history"})
     }
 }
