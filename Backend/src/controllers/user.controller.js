@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs"
 import User from "../models/user.model.js"
+import Event from "../models/event.model.js"
 import {generateToken} from "../lib/utils.js"
 import { uploadOnCloudinary } from "../lib/cloudinary.js"
 
@@ -100,5 +101,33 @@ export const logoutUser = async (_, res) => {
     catch(error){
         console.log(`Error in logging out : ${error}`)
         return res.status(500).json("Internal error in logging out")
+    }
+}
+
+export const saveEvent = async(req, res) => {
+    try{
+        if(req.role != "user"){
+            return res.status(403).json({message: "Only users can save events"})
+        }
+        const {eventId} = req.params
+        const userId = req.user._id
+
+        const event = await Event.findById(eventId)
+        const user = await User.findById(userId)
+
+        if(!user){
+            return res.status(404).json({message: "User not found"})
+        }
+        if(!event){
+            return res.status(404).json({message: "Event not found"})
+        }
+
+        await User.findByIdAndUpdate(userId, {$addToSet : {savedEvents: eventId}})
+
+        return res.status(200).json({message: "Event saved successfully"})
+    }
+    catch(error){
+        console.log(`Error in savig event : ${error}`)
+        return res.status(500).json({message: "Internal error in saving event"})
     }
 }

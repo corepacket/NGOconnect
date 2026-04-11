@@ -33,13 +33,11 @@ const eventSchema = new mongoose.Schema(
         ref:"NGO",
         required:true
     },
-
-   skillsRequired: [
+    skillsRequired: [
     {
       type: String
     }
   ],
-
   maxVolunteers: {
     type: Number,
     required: true
