@@ -56,25 +56,23 @@ export const viewEventRegistrations = async (req, res) => {
             return res.status(403).json({ message: "Only NGOs can view registrations" })
         }
 
-        const eventId = req.params.eventIdd
-
+        const eventId = req.params.eventId
         const event = await Event.findById(eventId)
-        .populate("volunteers", "fullname email")
-
-        if (!event) {
-            return res.status(400).json({ message: "Cannot find event" })
+        if(!event){
+            return res.status(404).json({message: "Event not found"})
         }
-        
+
         if (!event.ngoId.equals(req.user._id)) {
             return res.status(403).json({ message: "Not authorized to view registrations" });
         }
 
-        const registrations = await Registration.find({ event: event._id })
-        .populate("user", "fullName profilePic")
+        const registrations = await Registration.find({eventId})
+        .populate("userId", "fullname profilePic")
 
-        return res.status(200).json(registrations)
-
-    } catch (error) {
+        const users = registrations.map(reg => reg.userId)
+        return res.status(200).json(users)
+    }
+    catch(error){
         console.log(`Error in viewing registrations : ${error}`)
         return res.status(500).json({ message: "Internal error in viewing registrations" })
     }
