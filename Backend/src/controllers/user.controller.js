@@ -131,3 +131,27 @@ export const saveEvent = async(req, res) => {
         return res.status(500).json({message: "Internal error in saving event"})
     }
 }
+
+export const viewSavedEvents = async(req, res) => {
+    try{
+        if(req.role!="user"){
+            return res.status(403).json({message: "Only users can view saved events"})
+        }
+
+        const user = await User.findById(req.user._id).populate("savedEvents")
+        if(!user){
+            return res.status(404).json({message: "User not found"})
+        }
+
+        if(user.savedEvents.length==0){
+            return res.status(200).json({message: "No events saved yet"})
+        }
+        else{
+            return res.status(200).json(user.savedEvents)
+        }
+    }
+    catch(error){
+        console.log(`Error in viewing saved events : ${error}`)
+        return res.status(500).json({message: "Internal error in viewing saved events"})
+    }
+}
