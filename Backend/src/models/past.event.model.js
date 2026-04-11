@@ -32,16 +32,7 @@ const pastEventSchema = new mongoose.Schema(
         type:mongoose.Schema.Types.ObjectId,
         ref:"NGO",
         required:true
-    },
-    skillsRequired: [
-    {
-      type: String
     }
-  ],
-  maxVolunteers: {
-    type: Number,
-    required: true
-  }
 }, {timestamps: true})
 
 pastEventSchema.index({location:1});
