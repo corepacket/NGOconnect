@@ -39,6 +39,10 @@ export const protectRoute = async (req,res,next) => {
     }
     catch(error){
         console.log(`Error in protect route middleware: ${error.message}`)
+        if (error?.name === "JsonWebTokenError" || error?.name === "TokenExpiredError") {
+            res.cookie("jwt", "", { maxAge: 0 })
+            return res.status(401).json({ message: "Unauthorized : Invalid token" })
+        }
         return res.status(500).json({message: "Internal server error"})
     }
 }

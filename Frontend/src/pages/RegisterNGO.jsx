@@ -253,6 +253,19 @@ const RegisterNGO = () => {
               />
             </div>
 
+            {/* Logo */}
+            <div>
+              <label className="block text-sm font-medium text-earth-700 mb-2">
+                Organization logo
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                className="w-full border border-earth-200 rounded-lg p-2"
+              />
+            </div>
+
             {/* Password */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-earth-700 mb-2">

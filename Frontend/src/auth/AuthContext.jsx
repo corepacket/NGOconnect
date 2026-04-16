@@ -36,6 +36,10 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated,
     userType: auth?.userType,
     login: ({ userType, user }) => setAuth({ userType, user }),
+    updateUser: (userPatch) =>
+      setAuth((prev) =>
+        prev ? { ...prev, user: { ...prev.user, ...userPatch } } : prev
+      ),
     logout: () => setAuth(null),
   }), [auth])
 

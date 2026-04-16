@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { logoutVolunteer, updateVolunteerProfilePic } from '../service/auth.service'
 import {
   HiCalendar,
   HiUserGroup,
@@ -20,15 +21,16 @@ import { useAuth } from '../auth/AuthContext'
 import toast from 'react-hot-toast'
 
 const VolunteerDashboard = () => {
-  const { auth, logout } = useAuth()
+  const { auth, logout, updateUser } = useAuth()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('overview')
   const [showEditProfile, setShowEditProfile] = useState(false)
+  const [profileUploading, setProfileUploading] = useState(false)
   
   const [profileData, setProfileData] = useState({
-    name: auth?.user?.name || 'Volunteer',
+    name: auth?.user?.fullname || auth?.user?.name || 'Volunteer',
     email: auth?.user?.email || 'volunteer@example.com',
-    phone: auth?.user?.phone || '+1 234 567 890',
+    phone: auth?.user?.phoneNumber || auth?.user?.phone || '+1 234 567 890',
     bio: '',
     skills: [],
     availability: 'weekends',
@@ -53,7 +55,9 @@ const VolunteerDashboard = () => {
     name: profileData.name,
     email: profileData.email,
     phone: profileData.phone,
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
+    avatar:
+      auth?.user?.profilePic ||
+      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
     memberSince: profileData.memberSince,
     totalHours: auth?.user?.totalHours || 48,
     eventsAttended: auth?.user?.eventsAttended || 12,
@@ -114,7 +118,13 @@ const VolunteerDashboard = () => {
     }
   }
 
-  const handleLogout = () => {
+  const handleLogout = async() => {
+    try{
+      await logoutVolunteer();
+
+    }catch(err){
+      console.error("Volunteer logout unsuccessfull")
+    }
     logout()
     toast.success('Logged out successfully')
     navigate('/')
@@ -126,6 +136,22 @@ const VolunteerDashboard = () => {
     console.log('Updating profile:', profileData)
     toast.success('Profile updated successfully!')
     setShowEditProfile(false)
+  }
+
+  const handleProfilePicUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setProfileUploading(true)
+    try {
+      const updatedUser = await updateVolunteerProfilePic(file)
+      updateUser(updatedUser)
+      toast.success('Profile image updated successfully')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update profile image')
+    } finally {
+      setProfileUploading(false)
+      e.target.value = ''
+    }
   }
 
   const handleSkillToggle = (skill) => {
@@ -197,6 +223,18 @@ const VolunteerDashboard = () => {
                   <HiClock className="w-5 h-5 mr-2 text-primary-600" />
                   <span>Member since {user.memberSince}</span>
                 </div>
+              </div>
+              <div className="mt-3">
+                <label className="inline-flex items-center gap-2 px-3 py-2 text-sm border border-earth-200 rounded-lg cursor-pointer hover:bg-earth-50">
+                  <span>{profileUploading ? 'Uploading photo...' : 'Change photo'}</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleProfilePicUpload}
+                    disabled={profileUploading}
+                    className="hidden"
+                  />
+                </label>
               </div>
             </div>
             <button 

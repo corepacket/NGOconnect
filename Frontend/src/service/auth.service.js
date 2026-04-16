@@ -25,3 +25,17 @@ export const logoutNGO = async () => {
     const res = await api.post("/ngos/logout-ngo")
     return res.data
 }
+
+export const updateVolunteerProfilePic = async (file) => {
+    const fd = new FormData()
+    fd.append("profilePic", file)
+    const res = await api.patch("/users/profile-picture", fd)
+    return res.data
+}
+
+export const updateNgoLogo = async (file) => {
+    const fd = new FormData()
+    fd.append("logo", file)
+    const res = await api.patch("/ngos/logo", fd)
+    return res.data
+}

@@ -22,7 +22,7 @@ const EventCard = ({ event }) => {
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         <div className="absolute bottom-4 left-4 right-4">
           <span className="inline-block px-3 py-1 bg-gradient-to-r from-hope-600 to-compassion-600 text-white text-xs font-semibold rounded-full">
-            {event.category}
+            {event.category || 'General'}
           </span>
         </div>
       </div>

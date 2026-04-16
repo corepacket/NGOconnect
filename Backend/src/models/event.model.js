@@ -10,9 +10,22 @@ const eventSchema = new mongoose.Schema(
         type:String,
         required:true
     },
+    longDescription:{
+      type:String,
+      required:true
+    },
+    category: {
+      type: String,
+      default: "General",
+    },
     location: {
+
       type: String,
       required: true
+    },
+    coordinates:{
+      lat:{type:Number,default:0},
+      lng:{type:Number,default:0},
     },
     date:{
         type:Date,
@@ -23,10 +36,12 @@ const eventSchema = new mongoose.Schema(
       required: true
     },
     image: {
-      type: String
+      type: String,
+      default:""
     },
     imageId: {
-      type: String
+      type: String,
+      default:""
     },
     ngoId:{
         type:mongoose.Schema.Types.ObjectId,
@@ -39,6 +54,11 @@ const eventSchema = new mongoose.Schema(
       type: String
     }
   ],
+
+  requirements:[{type:String}],
+
+  benefits:[{type:String}],
+  
 
   maxVolunteers: {
     type: Number,
