@@ -1,11 +1,7 @@
 import { generateToken } from "../lib/utils.js"
 import bcrypt from "bcryptjs"
 import NGO from "../models/ngo.model.js"
-import Event from "../models/event.model.js"
-import Registration from "../models/registration.model.js"
-import PastEvent from "../models/past.event.model.js"
 import { uploadOnCloudinary } from "../lib/cloudinary.js"
-import Registration from "../models/registration.model.js"
 
 export const registerNGO = async(req, res) => {
     const {name, email, password, contactNumber, location, website, briefDescription} = req.body
