@@ -16,6 +16,7 @@ import { useAuth } from '../auth/AuthContext'
 import toast from 'react-hot-toast'
 import { approveRegistration, deleteEvent, fetchNgoApplications, fetchNgoEvents, rejectRegistration, updateEvent } from '../service/event.service'
 import { updateNgoLogo as updateNgoLogoApi } from '../service/auth.service'
+import { normalizeEvents } from '../lib/event-utils'
 
 const NGODashboard = () => {
   const { auth, logout, updateUser } = useAuth()
@@ -33,7 +34,7 @@ const NGODashboard = () => {
     const load = async () => {
       try {
         const data = await fetchNgoEvents()
-        if (!cancelled) setMyEvents(Array.isArray(data) ? data : [])
+        if (!cancelled) setMyEvents(normalizeEvents(data))
       } catch {
         if (!cancelled) {
           setMyEvents([])
@@ -74,7 +75,7 @@ const NGODashboard = () => {
   }
   const refreshMyEvents = async () => {
     const data = await fetchNgoEvents()
-    setMyEvents(Array.isArray(data) ? data : [])
+    setMyEvents(normalizeEvents(data))
   }
 
   const handleApprove = async (eventId, registrationId) => {
@@ -117,7 +118,7 @@ const NGODashboard = () => {
       volunteers: Array.isArray(event.volunteers) ? event.volunteers.length : 0,
       maxVolunteers: event.maxVolunteers,
       status: isPast ? 'completed' : 'active',
-      location: event.location,
+      location: event.locationText || event.location?.address || 'Location TBD',
       image:
         event.image ||
         'https://images.unsplash.com/photo-1594708767771-a7502209ff51?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
@@ -172,7 +173,7 @@ const NGODashboard = () => {
     }
     const title = window.prompt('Update title', event.title)
     if (title === null) return
-    const location = window.prompt('Update location', event.location)
+    const location = window.prompt('Update location', event.locationText || event.location?.address || '')
     if (location === null) return
     const timings = window.prompt('Update time', event.timings || '')
     if (timings === null) return

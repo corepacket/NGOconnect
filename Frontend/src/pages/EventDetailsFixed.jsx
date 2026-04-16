@@ -13,6 +13,7 @@ import toast from "react-hot-toast";
 import VolunteerList from "../components/VolunteerList";
 import { fetchEventById, volunteerForEvent } from "../service/event.service";
 import { useAuth } from "../auth/AuthContext";
+import { normalizeEvent } from "../lib/event-utils";
 
 const fallbackImage = "https://via.placeholder.com/1200x500?text=Event+Image";
 const fallbackLogo = "https://via.placeholder.com/100?text=NGO";
@@ -32,7 +33,7 @@ const EventDetailsFixed = () => {
       try {
         setLoading(true);
         const data = await fetchEventById(id);
-        setEvent(data);
+        setEvent(normalizeEvent(data));
       } catch (err) {
         toast.error(err.response?.data?.message || "Failed to load event");
       } finally {
@@ -43,7 +44,7 @@ const EventDetailsFixed = () => {
     if (id) loadEvent();
   }, [id]);
 
-  const ngo = event?.ngoId || {};
+  const ngo = event?.organization || {};
   const volunteers = Array.isArray(event?.volunteers) ? event.volunteers : [];
   const requirements = Array.isArray(event?.requirements) ? event.requirements : [];
   const benefits = Array.isArray(event?.benefits) ? event.benefits : [];
@@ -80,7 +81,7 @@ const EventDetailsFixed = () => {
       toast.success("Applied successfully");
 
       const refreshed = await fetchEventById(id);
-      setEvent(refreshed);
+      setEvent(normalizeEvent(refreshed));
 
       setApplicationMessage("");
       setShowApplicationForm(false);
@@ -141,7 +142,7 @@ const EventDetailsFixed = () => {
                     <HiLocationMarker className="w-4 h-4 mr-1" />
                     <span className="text-xs">Location</span>
                   </div>
-                  <div className="font-medium text-earth-900">{event.location || "N/A"}</div>
+                  <div className="font-medium text-earth-900">{event.location?.address || "N/A"}</div>
                 </div>
                 <div>
                   <div className="flex items-center text-earth-600 mb-1">
@@ -250,7 +251,9 @@ const EventDetailsFixed = () => {
                 <img src={ngo.logo || fallbackLogo} alt={ngo.name || "NGO"} className="w-16 h-16 rounded-lg object-cover" />
                 <div>
                   <h3 className="font-display font-semibold text-earth-900">{ngo.name || "Organization"}</h3>
-                  <p className="text-sm text-earth-600">{ngo.email || ""}</p>
+                  <p className="text-sm text-earth-600">
+                    {ngo.eventsCount ? `${ngo.eventsCount} events posted` : "Verified NGO"}
+                  </p>
                 </div>
               </div>
             </div>

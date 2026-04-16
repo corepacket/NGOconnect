@@ -1,5 +1,6 @@
 import { uploadOnCloudinary } from "../lib/cloudinary.js"
 import Event from "../models/event.model.js"
+import NGO from "../models/ngo.model.js"
 
 const defaultRequirements = [
     "Be on time",
@@ -65,6 +66,11 @@ const defaultRequirements = [
       image: event.image || "",
     };
   };
+
+const eventPopulate = [
+  { path: "ngoId", select: "name email logo location website briefDescription eventsPosted createdAt" },
+  { path: "volunteers", select: "fullname email profilePic skillsPossessed" },
+]
   
 
 export const addEvent = async (req, res) => {
@@ -113,10 +119,9 @@ export const addEvent = async (req, res) => {
             benefits: normalizeArrayField(benefits, defaultBenefits),
             maxVolunteers: Number(maxVolunteers),
       
-        }); 
-         const populated = await Event.findById(event._id)
-        .populate("ngoId", "name email logo location website briefDescription eventsPosted createdAt")
-        .populate("volunteers", "fullname email profilePic skillsPossessed");
+        });
+        await NGO.findByIdAndUpdate(req.user._id, { $addToSet: { eventsPosted: event._id } })
+        const populated = await Event.findById(event._id).populate(eventPopulate);
       return res.status(201).json(mapEventForFrontend(populated));
     } catch (error) {
       console.log(`Error in adding event : ${error}`);
@@ -127,10 +132,10 @@ export const addEvent = async (req, res) => {
 export const getAllEvents=async(_, res)=>{
     try{
         const events= await Event.find({})
-        .populate("ngoId","name email logo location website")
+        .populate(eventPopulate)
         .sort({createdAt:-1})
 
-        return res.status(200).json(events)
+        return res.status(200).json(events.map(mapEventForFrontend))
     }
     catch(error){
         console.log(`Error in getting all events : ${error}`)
@@ -141,13 +146,12 @@ export const getEventById=async(req,res)=>{
     const{id}=req.params
 try{
     const event=await Event.findById(id)
-    .populate("ngoId", "name email logo location website briefDescription")
-      .populate("volunteers", "fullname email profilePic skillsPossessed")
+    .populate(eventPopulate)
     if (!event) {
       return res.status(404).json({ message: "Event not found" })
     }
 
-    return res.status(200).json(event)
+    return res.status(200).json(mapEventForFrontend(event))
 }
 catch(error){
     console.log(`Error in getting event by id : ${error}`)
@@ -161,9 +165,9 @@ export const getMyEvents=async(req,res)=>{
         }
 
     const events = await Event.find({ ngoId: req.user._id })
-      .populate("volunteers", "fullname email profilePic")
+      .populate(eventPopulate)
       .sort({ createdAt: -1 })
-    return res.status(200).json(events)
+    return res.status(200).json(events.map(mapEventForFrontend))
   } catch (error) {
     console.log(`Error in getting NGO events : ${error}`)
     return res.status(500).json({ message: "Internal error in fetching NGO events" })
@@ -225,8 +229,8 @@ export const updateEvent = async (req, res) => {
     }
 
     await event.save()
-
-    return res.status(200).json(event)
+    const updatedEvent = await Event.findById(id).populate(eventPopulate)
+    return res.status(200).json(mapEventForFrontend(updatedEvent))
   } catch (error) {
     console.log(`Error in updating event : ${error}`)
     return res.status(500).json({ message: error?.message || "Internal error in updating event" })
@@ -249,6 +253,7 @@ export const deleteEvent = async (req, res) => {
     }
 
     await Event.findByIdAndDelete(id)
+    await NGO.findByIdAndUpdate(event.ngoId, { $pull: { eventsPosted: event._id } })
     return res.status(200).json({ message: "Event deleted successfully" })
   } catch (error) {
     console.log(`Error in deleting event : ${error}`)

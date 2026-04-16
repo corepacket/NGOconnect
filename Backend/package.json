@@ -4,7 +4,8 @@
   "description": "cep project",
   "main": "index.js",
   "scripts": {
-    "dev": "node ./src/index.js"
+    "dev": "node ./src/index.js",
+    "seed:demo": "node ./src/scripts/seedDemoData.js"
   },
   "author": "khushee",
   "type": "module",

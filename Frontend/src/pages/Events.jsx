@@ -6,6 +6,7 @@ import { HiCalendar, HiSparkles } from "react-icons/hi";
 import EventCard from "../components/EventCard";
 import { fetchEvents } from "../service/event.service";
 import { useAuth } from "../auth/AuthContext";
+import { normalizeEvents } from "../lib/event-utils";
 
 const Events = () => {
   const { userType, isAuthenticated } = useAuth();
@@ -16,7 +17,7 @@ const Events = () => {
     const loadEvents = async () => {
       try {
         const data = await fetchEvents();
-        setEvents(data || []);
+        setEvents(normalizeEvents(data));
       } catch (err) {
         toast.error(err.response?.data?.message || "Failed to load events");
       } finally {
