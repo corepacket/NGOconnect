@@ -1,34 +1,37 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { logoutVolunteer, updateVolunteerProfilePic } from '../service/auth.service'
 import {
   HiCalendar,
   HiUserGroup,
   HiHeart,
   HiClock,
-  HiCheckCircle,
-  HiXCircle,
-  HiLocationMarker,
   HiMail,
   HiPhone,
   HiLogout,
   HiX,
   HiSave,
 } from 'react-icons/hi'
-import { FaHandsHelping } from 'react-icons/fa'
 import { useAuth } from '../auth/AuthContext'
 import toast from 'react-hot-toast'
+import { fetchEvents } from '../service/event.service'
+import { normalizeEvents } from '../lib/event-utils'
+import EventCard from '../components/EventCard'
 
 const VolunteerDashboard = () => {
-  const { auth, logout } = useAuth()
+  const { auth, logout, updateUser } = useAuth()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('overview')
   const [showEditProfile, setShowEditProfile] = useState(false)
+  const [profileUploading, setProfileUploading] = useState(false)
+  const [discoverEvents, setDiscoverEvents] = useState([])
+  const [eventsLoading, setEventsLoading] = useState(true)
   
   const [profileData, setProfileData] = useState({
-    name: auth?.user?.name || 'Volunteer',
+    name: auth?.user?.fullname || auth?.user?.name || 'Volunteer',
     email: auth?.user?.email || 'volunteer@example.com',
-    phone: auth?.user?.phone || '+1 234 567 890',
+    phone: auth?.user?.phoneNumber || auth?.user?.phone || '+1 234 567 890',
     bio: '',
     skills: [],
     availability: 'weekends',
@@ -53,68 +56,41 @@ const VolunteerDashboard = () => {
     name: profileData.name,
     email: profileData.email,
     phone: profileData.phone,
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
+    avatar:
+      auth?.user?.profilePic ||
+      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
     memberSince: profileData.memberSince,
     totalHours: auth?.user?.totalHours || 48,
     eventsAttended: auth?.user?.eventsAttended || 12,
   }
 
-  const registeredEvents = [
-    {
-      id: 1,
-      title: 'Beach Cleanup Drive',
-      date: '2024-04-15',
-      status: 'approved',
-      organization: 'Ocean Conservation Society',
-      location: 'Miami Beach, FL',
-      image: 'https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    },
-    {
-      id: 2,
-      title: 'Teaching Workshop',
-      date: '2024-04-20',
-      status: 'pending',
-      organization: 'Education For All',
-      location: 'Community Center, Austin',
-      image: 'https://images.unsplash.com/photo-1577896851231-70ef18881754?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    },
-    {
-      id: 3,
-      title: 'Health Camp',
-      date: '2024-04-25',
-      status: 'completed',
-      organization: 'Rural Health Initiative',
-      location: 'Rural Health Center',
-      image: 'https://images.unsplash.com/photo-1631815588090-d4bfec5b1ccb?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    },
-  ]
+  useEffect(() => {
+    let cancelled = false
 
-  const savedEvents = [
-    { id: 4, title: 'Animal Shelter Support', organization: 'City Animal Shelter', date: '2024-05-01', location: 'City Animal Shelter' },
-    { id: 5, title: 'Food Distribution Drive', organization: 'Community Food Bank', date: '2024-05-05', location: 'Downtown Community Center' },
-  ]
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'approved': return 'text-green-600 bg-green-100'
-      case 'pending': return 'text-yellow-600 bg-yellow-100'
-      case 'rejected': return 'text-red-600 bg-red-100'
-      case 'completed': return 'text-blue-600 bg-blue-100'
-      default: return 'text-gray-600 bg-gray-100'
+    const loadEvents = async () => {
+      try {
+        const data = await fetchEvents()
+        if (!cancelled) setDiscoverEvents(normalizeEvents(data))
+      } catch (err) {
+        if (!cancelled) toast.error(err.response?.data?.message || 'Could not load event feed')
+      } finally {
+        if (!cancelled) setEventsLoading(false)
+      }
     }
-  }
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'approved': return <HiCheckCircle className="w-4 h-4" />
-      case 'pending': return <HiClock className="w-4 h-4" />
-      case 'rejected': return <HiXCircle className="w-4 h-4" />
-      case 'completed': return <HiCheckCircle className="w-4 h-4" />
-      default: return null
+    loadEvents()
+    return () => {
+      cancelled = true
     }
-  }
+  }, [])
 
-  const handleLogout = () => {
+  const handleLogout = async() => {
+    try{
+      await logoutVolunteer();
+
+    }catch(err){
+      console.error("Volunteer logout unsuccessfull")
+    }
     logout()
     toast.success('Logged out successfully')
     navigate('/')
@@ -126,6 +102,22 @@ const VolunteerDashboard = () => {
     console.log('Updating profile:', profileData)
     toast.success('Profile updated successfully!')
     setShowEditProfile(false)
+  }
+
+  const handleProfilePicUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setProfileUploading(true)
+    try {
+      const updatedUser = await updateVolunteerProfilePic(file)
+      updateUser(updatedUser)
+      toast.success('Profile image updated successfully')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update profile image')
+    } finally {
+      setProfileUploading(false)
+      e.target.value = ''
+    }
   }
 
   const handleSkillToggle = (skill) => {
@@ -145,6 +137,11 @@ const VolunteerDashboard = () => {
         : [...prev.interests, interest]
     }))
   }
+
+  const recommendedEvents = useMemo(
+    () => discoverEvents.filter((event) => event.spotsLeft > 0).slice(0, 6),
+    [discoverEvents]
+  )
 
   return (
     <div className="min-h-screen bg-earth-50 pt-24 pb-16">
@@ -198,6 +195,18 @@ const VolunteerDashboard = () => {
                   <span>Member since {user.memberSince}</span>
                 </div>
               </div>
+              <div className="mt-3">
+                <label className="inline-flex items-center gap-2 px-3 py-2 text-sm border border-earth-200 rounded-lg cursor-pointer hover:bg-earth-50">
+                  <span>{profileUploading ? 'Uploading photo...' : 'Change photo'}</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleProfilePicUpload}
+                    disabled={profileUploading}
+                    className="hidden"
+                  />
+                </label>
+              </div>
             </div>
             <button 
               onClick={() => setShowEditProfile(true)}
@@ -212,8 +221,8 @@ const VolunteerDashboard = () => {
           {[
             { icon: <HiCalendar />, label: 'Events Attended', value: user.eventsAttended, color: 'bg-blue-500' },
             { icon: <HiClock />, label: 'Volunteer Hours', value: user.totalHours, color: 'bg-green-500' },
-            { icon: <HiUserGroup />, label: 'NGOs Connected', value: '8', color: 'bg-purple-500' },
-            { icon: <HiHeart />, label: 'Impact Score', value: 'A+', color: 'bg-red-500' },
+            { icon: <HiUserGroup />, label: 'Open Opportunities', value: recommendedEvents.length, color: 'bg-purple-500' },
+            { icon: <HiHeart />, label: 'Community Impact', value: discoverEvents.length ? 'Growing' : 'Start now', color: 'bg-red-500' },
           ].map((stat, index) => (
             <motion.div
               key={index}
@@ -254,30 +263,28 @@ const VolunteerDashboard = () => {
           {activeTab === 'overview' && (
             <div className="space-y-6">
               <div className="bg-white rounded-2xl shadow-lg p-6">
-                <h3 className="text-xl font-display font-semibold text-earth-900 mb-4">Upcoming Events</h3>
-                <div className="space-y-4">
-                  {registeredEvents
-                    .filter((e) => e.status === 'approved' || e.status === 'pending')
-                    .map((event) => (
-                      <div key={event.id} className="flex items-center gap-4 p-4 bg-earth-50 rounded-xl">
-                        <img src={event.image} alt={event.title} className="w-16 h-16 rounded-lg object-cover" />
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-earth-900">{event.title}</h4>
-                          <p className="text-sm text-earth-600">{event.organization}</p>
-                          <div className="flex items-center text-sm text-earth-500 mt-1">
-                            <HiCalendar className="w-4 h-4 mr-1" />
-                            <span>{new Date(event.date).toLocaleDateString()}</span>
-                            <HiLocationMarker className="w-4 h-4 ml-3 mr-1" />
-                            <span>{event.location}</span>
-                          </div>
-                        </div>
-                        <div className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(event.status)}`}>
-                          {getStatusIcon(event.status)}
-                          <span className="capitalize">{event.status}</span>
-                        </div>
-                      </div>
-                    ))}
+                <div className="flex items-center justify-between gap-4 mb-4">
+                  <h3 className="text-xl font-display font-semibold text-earth-900">Recommended Events</h3>
+                  <Link to="/events" className="text-sm font-semibold text-primary-600 hover:text-primary-700">
+                    View all
+                  </Link>
                 </div>
+                {eventsLoading ? (
+                  <div className="text-sm text-earth-500 py-8 text-center">Loading event feed...</div>
+                ) : recommendedEvents.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                    {recommendedEvents.slice(0, 3).map((event) => (
+                      <EventCard key={event._id} event={event} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-dashed border-earth-200 bg-earth-50 px-6 py-10 text-center">
+                    <p className="text-earth-800 font-medium mb-2">No live opportunities yet</p>
+                    <p className="text-earth-500 text-sm">
+                      Once NGOs post events or you seed demo data, they will appear here automatically.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -285,81 +292,48 @@ const VolunteerDashboard = () => {
           {activeTab === 'registered' && (
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <h3 className="text-xl font-display font-semibold text-earth-900 mb-4">My Registered Events</h3>
-              <div className="space-y-4">
-                {registeredEvents.map((event) => (
-                  <div key={event.id} className="flex items-center gap-4 p-4 bg-earth-50 rounded-xl">
-                    <img src={event.image} alt={event.title} className="w-20 h-20 rounded-lg object-cover" />
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-earth-900">{event.title}</h4>
-                      <p className="text-sm text-earth-600 mb-2">{event.organization}</p>
-                      <div className="flex items-center text-sm text-earth-500">
-                        <HiCalendar className="w-4 h-4 mr-1" />
-                        <span>{new Date(event.date).toLocaleDateString()}</span>
-                        <HiLocationMarker className="w-4 h-4 ml-3 mr-1" />
-                        <span>{event.location}</span>
-                      </div>
-                    </div>
-                    <div className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(event.status)}`}>
-                      {getStatusIcon(event.status)}
-                      <span className="capitalize">{event.status}</span>
-                    </div>
-                  </div>
-                ))}
+              <div className="rounded-xl border border-dashed border-earth-200 bg-earth-50 px-6 py-10 text-center">
+                <p className="text-earth-800 font-medium mb-2">Registration history is not wired yet</p>
+                <p className="text-earth-500 text-sm mb-4">
+                  You can still browse and apply for events now. This tab can later be connected to your `eventsRegistered` data.
+                </p>
+                <Link
+                  to="/events"
+                  className="inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700"
+                >
+                  Browse events
+                </Link>
               </div>
             </div>
           )}
 
           {activeTab === 'saved' && (
             <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-xl font-display font-semibold text-earth-900 mb-4">Saved Events</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {savedEvents.map((event) => (
-                  <div key={event.id} className="p-4 border border-earth-200 rounded-xl hover:shadow-md transition-shadow">
-                    <h4 className="font-semibold text-earth-900 mb-1">{event.title}</h4>
-                    <p className="text-sm text-earth-600 mb-2">{event.organization}</p>
-                    <div className="flex items-center text-sm text-earth-500 mb-3">
-                      <HiCalendar className="w-4 h-4 mr-1" />
-                      <span>{new Date(event.date).toLocaleDateString()}</span>
-                      <HiLocationMarker className="w-4 h-4 ml-3 mr-1" />
-                      <span>{event.location}</span>
-                    </div>
-                    <Link
-                      to="/events"
-                      className="block w-full text-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm"
-                    >
-                      Register Now
-                    </Link>
-                  </div>
-                ))}
-              </div>
+              <h3 className="text-xl font-display font-semibold text-earth-900 mb-4">Explore More Opportunities</h3>
+              {eventsLoading ? (
+                <div className="text-sm text-earth-500 py-8 text-center">Loading suggestions...</div>
+              ) : recommendedEvents.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {recommendedEvents.slice(0, 4).map((event) => (
+                    <EventCard key={event._id} event={event} />
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-xl border border-dashed border-earth-200 bg-earth-50 px-6 py-10 text-center text-earth-500">
+                  No event suggestions available yet.
+                </div>
+              )}
             </div>
           )}
 
           {activeTab === 'history' && (
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <h3 className="text-xl font-display font-semibold text-earth-900 mb-4">Volunteer History</h3>
-              <div className="space-y-4">
-                {registeredEvents
-                  .filter((e) => e.status === 'completed')
-                  .map((event) => (
-                    <div key={event.id} className="flex items-center gap-4 p-4 bg-earth-50 rounded-xl">
-                      <img src={event.image} alt={event.title} className="w-20 h-20 rounded-lg object-cover" />
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-earth-900">{event.title}</h4>
-                        <p className="text-sm text-earth-600 mb-2">{event.organization}</p>
-                        <div className="flex items-center text-sm text-earth-500">
-                          <HiCalendar className="w-4 h-4 mr-1" />
-                          <span>{new Date(event.date).toLocaleDateString()}</span>
-                          <HiLocationMarker className="w-4 h-4 ml-3 mr-1" />
-                          <span>{event.location}</span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm font-medium text-earth-900">4 hours</div>
-                        <div className="text-xs text-earth-500">volunteered</div>
-                      </div>
-                    </div>
-                  ))}
+              <div className="rounded-xl border border-dashed border-earth-200 bg-earth-50 px-6 py-10 text-center">
+                <p className="text-earth-800 font-medium mb-2">Your completed events will show here</p>
+                <p className="text-earth-500 text-sm">
+                  This screen is ready for real history data once volunteer registration tracking is added end to end.
+                </p>
               </div>
             </div>
           )}

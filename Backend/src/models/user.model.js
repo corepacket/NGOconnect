@@ -25,11 +25,11 @@ const userSchema = new mongoose.Schema(
         },
         profilePic: {
             type: String,
-            required: true
+            default: ""
         },
         profilePicId: {
             type: String,
-            required: true
+            default: ""
         },
         skillsPossessed: [
             {

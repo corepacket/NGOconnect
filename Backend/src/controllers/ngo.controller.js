@@ -50,15 +50,16 @@ export const registerNGO = async(req, res) => {
         generateToken(ngo._id, "ngo", res)
 
         return res.status(201).json({
-            _id: ngo._is,
+            _id: ngo._id,
             name: ngo.name,
             email: ngo.email,
-            contactNumber: ngo.contactNumber
+            contactNumber: ngo.contactNumber,
+            logo: ngo.logo
         })
     }
     catch(error){
         console.log(`Error in registering NGO : ${error}`)
-        return res.status(500).json({message: "Internal error in registering NGO"})
+        return res.status(500).json({message: error?.message || "Internal error in registering NGO"})
     }
 }
 
@@ -87,12 +88,13 @@ export const loginNGO = async(req, res) => {
             _id: ngo._id,
             name: ngo.name,
             email: ngo.email,
-            contactNumber: ngo.contactNumber
+            contactNumber: ngo.contactNumber,
+            logo: ngo.logo
         })
     }
     catch(error){
         console.log(`Error in logging in : ${error}`)
-        return res.status(500).json({message: "Internal error in logging in"})
+        return res.status(500).json({message: error?.message || "Internal error in logging in"})
     }
 }
 
@@ -104,5 +106,40 @@ export const logoutNGO = async (_, res) => {
     catch(error){
         console.log(`Error in logging out : ${error}`)
         return res.status(500).json({message: "Internal error in logging out"})
+    }
+}
+
+export const updateNgoLogo = async (req, res) => {
+    try {
+        if (req.role !== "ngo") {
+            return res.status(403).json({ message: "Only NGOs can update logo" })
+        }
+
+        const logoLocalPath = req.files?.logo?.[0]?.path
+        if (!logoLocalPath) {
+            return res.status(400).json({ message: "Logo file is required" })
+        }
+
+        const logo = await uploadOnCloudinary(logoLocalPath)
+        if (!logo?.secure_url) {
+            return res.status(500).json({ message: "Failed to upload logo" })
+        }
+
+        const ngo = await NGO.findByIdAndUpdate(
+            req.user._id,
+            { logo: logo.secure_url, logoId: logo.public_id || "" },
+            { new: true }
+        ).select("-password")
+
+        return res.status(200).json({
+            _id: ngo._id,
+            name: ngo.name,
+            email: ngo.email,
+            contactNumber: ngo.contactNumber,
+            logo: ngo.logo
+        })
+    } catch (error) {
+        console.log(`Error in updating NGO logo : ${error}`)
+        return res.status(500).json({ message: error?.message || "Internal error in updating NGO logo" })
     }
 }

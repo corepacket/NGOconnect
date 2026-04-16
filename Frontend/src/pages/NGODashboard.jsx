@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import {
+import { logoutNGO } from '../service/auth.service'
+import{
   HiCalendar,
   HiUserGroup,
   HiLocationMarker,
@@ -13,11 +14,116 @@ import {
 } from 'react-icons/hi'
 import { useAuth } from '../auth/AuthContext'
 import toast from 'react-hot-toast'
+import { approveRegistration, deleteEvent, fetchNgoApplications, fetchNgoEvents, rejectRegistration, updateEvent } from '../service/event.service'
+import { updateNgoLogo as updateNgoLogoApi } from '../service/auth.service'
+import { normalizeEvents } from '../lib/event-utils'
 
 const NGODashboard = () => {
-  const { auth, logout } = useAuth()
+  const { auth, logout, updateUser } = useAuth()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('overview')
+  const [myEvents, setMyEvents] = useState([])
+  const [eventsLoading, setEventsLoading] = useState(true)
+  const [applicationsLoading, setApplicationsLoading] = useState(true)
+  const [applications, setApplications] = useState([])
+  const [actioning, setActioning] = useState({})
+  const [logoUploading, setLogoUploading] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      try {
+        const data = await fetchNgoEvents()
+        if (!cancelled) setMyEvents(normalizeEvents(data))
+      } catch {
+        if (!cancelled) {
+          setMyEvents([])
+          toast.error('Could not load your events. Are you logged in?')
+        }
+      } finally {
+        if (!cancelled) setEventsLoading(false)
+      }
+    }
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      try {
+        const data = await fetchNgoApplications()
+        const regs = Array.isArray(data?.registrations) ? data.registrations : []
+        if (!cancelled) setApplications(regs)
+      } catch {
+        if (!cancelled) setApplications([])
+      } finally {
+        if (!cancelled) setApplicationsLoading(false)
+      }
+    }
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const refreshApplications = async () => {
+    const data = await fetchNgoApplications()
+    setApplications(Array.isArray(data?.registrations) ? data.registrations : [])
+  }
+  const refreshMyEvents = async () => {
+    const data = await fetchNgoEvents()
+    setMyEvents(normalizeEvents(data))
+  }
+
+  const handleApprove = async (eventId, registrationId) => {
+    const key = `${eventId}:${registrationId}`
+    setActioning((p) => ({ ...p, [key]: true }))
+    try {
+      await approveRegistration(eventId, registrationId)
+      toast.success('Approved')
+      await refreshApplications()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to approve')
+    } finally {
+      setActioning((p) => ({ ...p, [key]: false }))
+    }
+  }
+
+  const handleReject = async (eventId, registrationId) => {
+    const key = `${eventId}:${registrationId}`
+    setActioning((p) => ({ ...p, [key]: true }))
+    try {
+      await rejectRegistration(eventId, registrationId)
+      toast.success('Rejected')
+      await refreshApplications()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to reject')
+    } finally {
+      setActioning((p) => ({ ...p, [key]: false }))
+    }
+  }
+
+  const mapEventRow = (event) => {
+    const d = event.date ? new Date(event.date) : null
+    const isPast = d && d < new Date(new Date().setHours(0, 0, 0, 0))
+    return {
+      id: event._id,
+      _id: event._id,
+      title: event.title,
+      date: event.date,
+      timings: event.timings,
+      volunteers: Array.isArray(event.volunteers) ? event.volunteers.length : 0,
+      maxVolunteers: event.maxVolunteers,
+      status: isPast ? 'completed' : 'active',
+      location: event.locationText || event.location?.address || 'Location TBD',
+      image:
+        event.image ||
+        'https://images.unsplash.com/photo-1594708767771-a7502209ff51?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    }
+  }
 
   const ngo = auth?.user ?? {
     name: 'Ocean Conservation Society',
@@ -27,48 +133,77 @@ const NGODashboard = () => {
     totalVolunteers: 245,
     pendingApplications: 8,
   }
+  const ngoLogo =
+    ngo.logo ||
+    'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80'
 
-  const myEvents = [
-    {
-      id: 1,
-      title: 'Beach Cleanup Drive',
-      date: '2024-04-15',
-      volunteers: 32,
-      maxVolunteers: 50,
-      status: 'active',
-      location: 'Miami Beach, FL',
-      image: 'https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    },
-    {
-      id: 2,
-      title: 'Teaching Workshop',
-      date: '2024-04-20',
-      volunteers: 18,
-      maxVolunteers: 20,
-      status: 'active',
-      location: 'Community Center, Austin',
-      image: 'https://images.unsplash.com/photo-1577896851231-70ef18881754?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    },
-    {
-      id: 3,
-      title: 'Health Camp 2024',
-      date: '2024-03-10',
-      volunteers: 30,
-      maxVolunteers: 30,
-      status: 'completed',
-      location: 'Rural Health Center',
-      image: 'https://images.unsplash.com/photo-1631815588090-d4bfec5b1ccb?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    },
-  ]
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setLogoUploading(true)
+    try {
+      const updatedNgo = await updateNgoLogoApi(file)
+      updateUser(updatedNgo)
+      toast.success('Logo updated successfully')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update logo')
+    } finally {
+      setLogoUploading(false)
+      e.target.value = ''
+    }
+  }
 
-  const applications = [
-    { id: 1, volunteerName: 'Sarah Johnson', eventTitle: 'Beach Cleanup Drive', status: 'pending', appliedAt: '2024-04-10' },
-    { id: 2, volunteerName: 'Michael Chen', eventTitle: 'Beach Cleanup Drive', status: 'pending', appliedAt: '2024-04-09' },
-    { id: 3, volunteerName: 'Priya Patel', eventTitle: 'Teaching Workshop', status: 'approved', appliedAt: '2024-04-08' },
-    { id: 4, volunteerName: 'James Wilson', eventTitle: 'Beach Cleanup Drive', status: 'rejected', appliedAt: '2024-04-07' },
-  ]
+  const handleDeleteEvent = async (eventId) => {
+    const ok = window.confirm('Delete this event? This action cannot be undone.')
+    if (!ok) return
+    try {
+      await deleteEvent(eventId)
+      toast.success('Event deleted')
+      await refreshMyEvents()
+      await refreshApplications()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete event')
+    }
+  }
 
-  const handleLogout = () => {
+  const handleEditEvent = async (event) => {
+    if (!event?._id) {
+      toast.error('Event data not found')
+      return
+    }
+    const title = window.prompt('Update title', event.title)
+    if (title === null) return
+    const location = window.prompt('Update location', event.locationText || event.location?.address || '')
+    if (location === null) return
+    const timings = window.prompt('Update time', event.timings || '')
+    if (timings === null) return
+    const maxVolunteers = window.prompt('Update max volunteers', String(event.maxVolunteers || ''))
+    if (maxVolunteers === null) return
+
+    const payload = new FormData()
+    payload.append('title', title.trim())
+    payload.append('location', location.trim())
+    payload.append('timings', timings.trim())
+    payload.append('maxVolunteers', String(Number(maxVolunteers)))
+
+    try {
+      await updateEvent(event._id, payload)
+      toast.success('Event updated')
+      await refreshMyEvents()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update event')
+    }
+  }
+
+  const dashboardEvents = myEvents.map(mapEventRow)
+  const pendingCount = applications.filter((a) => a.status === 'pending').length
+
+  const handleLogout = async () => {
+    try {
+      await logoutNGO()
+    } catch (err) {
+      console.error('NGO logout request failed')
+    }
     logout()
     toast.success('Logged out successfully')
     navigate('/')
@@ -106,16 +241,28 @@ const NGODashboard = () => {
         >
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
             <img
-              src={ngo.logo}
+              src={ngoLogo}
               alt={ngo.name}
               className="w-24 h-24 rounded-xl object-cover border-4 border-primary-100"
             />
             <div className="flex-1">
               <h2 className="text-2xl font-display font-semibold text-earth-900 mb-2">{ngo.name}</h2>
               <p className="text-earth-600">{ngo.email}</p>
+              <div className="mt-3">
+                <label className="inline-flex items-center gap-2 px-3 py-2 text-sm border border-earth-200 rounded-lg cursor-pointer hover:bg-earth-50">
+                  <span>{logoUploading ? 'Uploading logo...' : 'Change logo'}</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoUpload}
+                    disabled={logoUploading}
+                    className="hidden"
+                  />
+                </label>
+              </div>
             </div>
             <Link
-              to="/events"
+              to="/events/new"
               className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary-600 to-secondary-600 text-white rounded-lg hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
             >
               <HiPlus className="w-5 h-5" />
@@ -128,7 +275,7 @@ const NGODashboard = () => {
           {[
             { icon: <HiCalendar />, label: 'Events Posted', value: ngo.eventsCount ?? 12, color: 'bg-blue-500' },
             { icon: <HiUserGroup />, label: 'Total Volunteers', value: ngo.totalVolunteers ?? 245, color: 'bg-green-500' },
-            { icon: <HiClock />, label: 'Pending Applications', value: ngo.pendingApplications ?? 8, color: 'bg-yellow-500' },
+            { icon: <HiClock />, label: 'Pending Applications', value: pendingCount, color: 'bg-yellow-500' },
             { icon: <HiCheckCircle />, label: 'Completed Events', value: '5', color: 'bg-purple-500' },
           ].map((stat, index) => (
             <motion.div
@@ -171,8 +318,11 @@ const NGODashboard = () => {
             <div className="space-y-6">
               <div className="bg-white rounded-2xl shadow-lg p-6">
                 <h3 className="text-xl font-display font-semibold text-earth-900 mb-4">Your Active Events</h3>
+                {eventsLoading ? (
+                  <p className="text-earth-500 text-sm py-8 text-center">Loading your events…</p>
+                ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {myEvents
+                  {dashboardEvents
                     .filter((e) => e.status === 'active')
                     .map((event) => (
                       <div key={event.id} className="p-4 border border-earth-200 rounded-xl hover:shadow-md transition-shadow">
@@ -191,23 +341,65 @@ const NGODashboard = () => {
                         </div>
                       </div>
                     ))}
+                  {dashboardEvents.filter((e) => e.status === 'active').length === 0 && (
+                    <div className="col-span-full text-center py-10 px-4 rounded-xl border border-dashed border-earth-200 bg-earth-50/80">
+                      <p className="text-earth-700 font-medium mb-1">No upcoming events yet</p>
+                      <p className="text-earth-500 text-sm mb-4">Create an event so volunteers can find you on the listings page.</p>
+                      <Link
+                        to="/events/new"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 text-white rounded-lg text-sm font-semibold hover:bg-primary-700"
+                      >
+                        <HiPlus className="w-4 h-4" />
+                        Post your first event
+                      </Link>
+                    </div>
+                  )}
                 </div>
+                )}
               </div>
               <div className="bg-white rounded-2xl shadow-lg p-6">
                 <h3 className="text-xl font-display font-semibold text-earth-900 mb-4">Recent Volunteer Applications</h3>
                 <div className="space-y-3">
-                  {applications.filter((a) => a.status === 'pending').slice(0, 3).map((app) => (
-                    <div key={app.id} className="flex items-center justify-between p-4 bg-earth-50 rounded-xl">
-                      <div>
-                        <p className="font-medium text-earth-900">{app.volunteerName}</p>
-                        <p className="text-sm text-earth-600">{app.eventTitle}</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <button className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-sm hover:bg-green-200">Approve</button>
-                        <button className="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-sm hover:bg-red-200">Reject</button>
-                      </div>
-                    </div>
-                  ))}
+                  {applicationsLoading ? (
+                    <div className="text-center py-8 text-earth-500 text-sm">Loading applications…</div>
+                  ) : (
+                    applications
+                      .filter((a) => a.status === 'pending')
+                      .slice(0, 3)
+                      .map((app) => {
+                        const key = `${app.event?._id}:${app._id}`
+                        return (
+                          <div key={app._id} className="flex items-center justify-between p-4 bg-earth-50 rounded-xl">
+                            <div>
+                              <p className="font-medium text-earth-900">{app.user?.fullname || 'Volunteer'}</p>
+                              <p className="text-sm text-earth-600">{app.event?.title || 'Event'}</p>
+                              <p className="text-xs text-earth-500 mt-1">{app.user?.email}</p>
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                disabled={actioning[key]}
+                                onClick={() => handleApprove(app.event?._id, app._id)}
+                                className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-sm hover:bg-green-200 disabled:opacity-60"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                type="button"
+                                disabled={actioning[key]}
+                                onClick={() => handleReject(app.event?._id, app._id)}
+                                className="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-sm hover:bg-red-200 disabled:opacity-60"
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          </div>
+                        )
+                      })
+                  )}
+                  {!applicationsLoading && applications.filter((a) => a.status === 'pending').length === 0 && (
+                    <div className="text-center py-8 text-earth-500 text-sm">No pending applications.</div>
+                  )}
                 </div>
               </div>
             </div>
@@ -216,8 +408,11 @@ const NGODashboard = () => {
           {activeTab === 'events' && (
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <h3 className="text-xl font-display font-semibold text-earth-900 mb-4">All Your Events</h3>
+              {eventsLoading ? (
+                <p className="text-earth-500 text-sm py-8 text-center">Loading…</p>
+              ) : (
               <div className="space-y-4">
-                {myEvents.map((event) => (
+                {dashboardEvents.map((event) => (
                   <div key={event.id} className="flex items-center gap-4 p-4 bg-earth-50 rounded-xl">
                     <img src={event.image} alt={event.title} className="w-20 h-20 rounded-lg object-cover" />
                     <div className="flex-1">
@@ -239,10 +434,37 @@ const NGODashboard = () => {
                     >
                       {event.status}
                     </span>
-                    <button className="px-4 py-2 border border-earth-200 rounded-lg text-sm hover:bg-earth-50">Edit</button>
+                    <button
+                      type="button"
+                      onClick={() => handleEditEvent(myEvents.find((e) => e._id === event.id))}
+                      className="px-4 py-2 border border-earth-200 rounded-lg text-sm hover:bg-earth-50"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteEvent(event.id)}
+                      className="px-4 py-2 border border-red-200 text-red-600 rounded-lg text-sm hover:bg-red-50"
+                    >
+                      Delete
+                    </button>
                   </div>
                 ))}
+                {dashboardEvents.length === 0 && (
+                  <div className="text-center py-12 px-4 rounded-xl border border-dashed border-earth-200 bg-earth-50/80">
+                    <p className="text-earth-700 font-medium mb-1">You have not posted any events</p>
+                    <p className="text-earth-500 text-sm mb-4">Events you publish will show here and on the public volunteer page.</p>
+                    <Link
+                      to="/events/new"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary-600 to-secondary-600 text-white rounded-lg text-sm font-semibold"
+                    >
+                      <HiPlus className="w-4 h-4" />
+                      Post an event
+                    </Link>
+                  </div>
+                )}
               </div>
+              )}
             </div>
           )}
 
@@ -250,36 +472,62 @@ const NGODashboard = () => {
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <h3 className="text-xl font-display font-semibold text-earth-900 mb-4">Volunteer Applications</h3>
               <div className="space-y-4">
-                {applications.map((app) => (
-                  <div key={app.id} className="flex items-center justify-between p-4 bg-earth-50 rounded-xl">
-                    <div>
-                      <p className="font-medium text-earth-900">{app.volunteerName}</p>
-                      <p className="text-sm text-earth-600">{app.eventTitle}</p>
-                      <p className="text-xs text-earth-500 mt-1">Applied {new Date(app.appliedAt).toLocaleDateString()}</p>
-                    </div>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        app.status === 'pending'
-                          ? 'bg-yellow-100 text-yellow-700'
-                          : app.status === 'approved'
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-red-100 text-red-700'
-                      }`}
-                    >
-                      {app.status}
-                    </span>
-                    {app.status === 'pending' && (
-                      <div className="flex gap-2">
-                        <button className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-sm hover:bg-green-200">
-                          <HiCheckCircle className="w-4 h-4 inline" />
-                        </button>
-                        <button className="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-sm hover:bg-red-200">
-                          <HiXCircle className="w-4 h-4 inline" />
-                        </button>
+                {applicationsLoading ? (
+                  <div className="text-center py-10 text-earth-500 text-sm">Loading…</div>
+                ) : applications.length === 0 ? (
+                  <div className="text-center py-10 text-earth-500 text-sm">No applications yet.</div>
+                ) : (
+                  applications.map((app) => {
+                    const key = `${app.event?._id}:${app._id}`
+                    return (
+                      <div key={app._id} className="flex items-center justify-between p-4 bg-earth-50 rounded-xl gap-4">
+                        <div className="min-w-0">
+                          <p className="font-medium text-earth-900 truncate">{app.user?.fullname || 'Volunteer'}</p>
+                          <p className="text-sm text-earth-600 truncate">{app.event?.title || 'Event'}</p>
+                          <p className="text-xs text-earth-500 mt-1">
+                            Applied {app.appliedAt ? new Date(app.appliedAt).toLocaleDateString() : ''}
+                            {app.user?.email ? ` • ${app.user.email}` : ''}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3 shrink-0">
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              app.status === 'pending'
+                                ? 'bg-yellow-100 text-yellow-700'
+                                : app.status === 'approved'
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-red-100 text-red-700'
+                            }`}
+                          >
+                            {app.status}
+                          </span>
+                          {app.status === 'pending' && (
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                disabled={actioning[key]}
+                                onClick={() => handleApprove(app.event?._id, app._id)}
+                                className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-sm hover:bg-green-200 disabled:opacity-60"
+                                title="Approve"
+                              >
+                                <HiCheckCircle className="w-4 h-4 inline" />
+                              </button>
+                              <button
+                                type="button"
+                                disabled={actioning[key]}
+                                onClick={() => handleReject(app.event?._id, app._id)}
+                                className="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-sm hover:bg-red-200 disabled:opacity-60"
+                                title="Reject"
+                              >
+                                <HiXCircle className="w-4 h-4 inline" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    )}
-                  </div>
-                ))}
+                    )
+                  })
+                )}
               </div>
             </div>
           )}

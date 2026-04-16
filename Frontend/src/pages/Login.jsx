@@ -5,6 +5,7 @@ import { FaHandsHelping } from 'react-icons/fa'
 import { HiMail, HiLockClosed, HiEye, HiEyeOff } from 'react-icons/hi'
 import toast from 'react-hot-toast'
 import { useAuth } from '../auth/AuthContext'
+import { loginNGO, loginVolunteer } from '../service/auth.service'
 
 const Login = () => {
   const navigate = useNavigate()
@@ -25,30 +26,29 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsLoading(true)
+    try {
+      if (!formData.email || !formData.password) {
+        toast.error('Please fill in all fields')
+        return
+      }
 
-    // Simulate API call - replace with actual auth logic
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    if (formData.email && formData.password) {
       const userType = formData.userType
+      const payload = { email: formData.email, password: formData.password }
+      const data = userType === 'ngo'
+        ? await loginNGO(payload)
+        : await loginVolunteer(payload)
+
       login({
         userType,
-        user: {
-          name: formData.email.split('@')[0],
-          email: formData.email,
-          avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-          ...(userType === 'ngo' && {
-            name: 'Ocean Conservation Society',
-            logo: 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-          }),
-        },
+        user: data,
       })
-      toast.success(`Welcome back! Logging in as ${userType}...`)
+      toast.success(`Welcome back! Logged in as ${userType}.`)
       navigate(userType === 'ngo' ? '/dashboard/ngo' : '/dashboard/volunteer')
-    } else {
-      toast.error('Please fill in all fields')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Login failed')
+    } finally {
+      setIsLoading(false)
     }
-    setIsLoading(false)
   }
 
   return (

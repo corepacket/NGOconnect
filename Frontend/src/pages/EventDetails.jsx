@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import {useEffect, useMemo, useState} from "react";
+
 import { useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { 
@@ -11,223 +12,308 @@ import {
   HiCheckCircle,
   HiOutlineBookmark
 } from 'react-icons/hi'
+
 import { FaHandsHelping } from 'react-icons/fa'
 import { format } from 'date-fns'
-import EventCard from '../components/EventCard'
-import VolunteerList from '../components/VolunteerList'
+
+import toast from "react-hot-toast";
+import VolunteerList from "../components/VolunteerList";
+import { fetchEventById, volunteerForEvent } from "../service/event.service";
+import { useAuth } from "../auth/AuthContext";
+
+
+
+const fallbackImage = "https://via.placeholder.com/1200x500?text=Event+Image";
+const fallbackLogo = "https://via.placeholder.com/100?text=NGO";
+
+
+
+
+
+
+
+
 
 const EventDetails = () => {
-  const { id } = useParams()
+  const { id } = useParams();
+  const[event,setEvent]=useState(null)
+  const[loading,setLoading]=useState(null)
   const [isSaved, setIsSaved] = useState(false)
   const [showApplicationForm, setShowApplicationForm] = useState(false)
   const [applicationMessage, setApplicationMessage] = useState('')
+  const{ isAuthenticated,userType}=useAuth()
 
-  // Sample event data (in real app, fetch based on id)
-  const eventData = {
-    '1': {
-      _id: '1',
-      title: 'Beach Cleanup Drive',
-      description: 'Join us in cleaning the local beach and protecting marine life. We need enthusiastic volunteers to help collect waste and sort recyclables. This event is part of our monthly initiative to keep our beaches clean and raise awareness about marine pollution.',
-      longDescription: `
-        <p>Join Ocean Conservation Society for our monthly beach cleanup event at Juhu Beach, Mumbai. This is a great opportunity to make a tangible difference in protecting our marine environment while meeting like-minded individuals passionate about conservation.</p>
-        
-        <h4>What to expect:</h4>
-        <ul>
-          <li>Cleanup equipment (gloves, bags, pickers) will be provided</li>
-          <li>Brief orientation on safety and waste sorting</li>
-          <li>2-hour cleanup session</li>
-          <li>Refreshments and snacks provided</li>
-          <li>Certificate of participation for volunteers</li>
-        </ul>
-        
-        <h4>Impact:</h4>
-        <p>Last month, our volunteers collected over 500 lbs of waste from this beach, preventing it from entering the ocean and harming marine life. Your participation directly contributes to cleaner beaches and healthier oceans.</p>
-      `,
-      date: '2024-04-15',
-      time: '09:00 AM - 12:00 PM',
-      category: 'Environment',
-      organization: {
-        name: 'Ocean Conservation Society',
-        logo: 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-        rating: 4.8,
-        eventsCount: 45,
-        joinedDate: '2019',
-      },
-      skillsRequired: ['Teamwork', 'Physical Fitness', 'Environmental Awareness', 'Waste Sorting'],
-      volunteers: [
-        { id: 1, name: 'Sarah Johnson', avatar: 'https://images.unsplash.com/photo-1494790108777-296fd5c7c9b2?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80' },
-        { id: 2, name: 'Michael Chen', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80' },
-        { id: 3, name: 'Priya Patel', avatar: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80' },
-      ],
-      maxVolunteers: 50,
-      currentVolunteers: 32,
-      location: {
-        address: 'Juhu Beach, Mumbai, Maharashtra 400049',
-        coordinates: { lat: 19.1075, lng: 72.8261 },
-      },
-      requirements: [
-        'Must be at least 18 years old',
-        'Comfortable working outdoors',
-        'Able to lift up to 20 lbs',
-        'Wear closed-toe shoes and comfortable clothing',
-      ],
-      benefits: [
-        'Certificate of participation',
-        'Community service hours',
-        'Free refreshments',
-        'Networking with environmental enthusiasts',
-      ],
-      images: [
-        'https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      ],
-    },
-    '2': {
-      _id: '2',
-      title: 'Teaching Workshop',
-      description: 'Help underprivileged children with their studies in mathematics and science.',
-      longDescription: `
-        <p>Join Education First Foundation for our teaching workshop in Dharavi, Mumbai. This is a wonderful opportunity to help shape young minds and make a lasting impact on children's education.</p>
-        
-        <h4>What to expect:</h4>
-        <ul>
-          <li>Teaching materials and curriculum provided</li>
-          <li>Training session on effective teaching methods</li>
-          <li>3-hour teaching session with small groups</li>
-          <li>Interaction with local teachers and community</li>
-          <li>Certificate of appreciation for volunteers</li>
-        </ul>
-        
-        <h4>Impact:</h4>
-        <p>Last month, our volunteers helped over 50 children improve their math and science scores. Your participation directly contributes to better educational outcomes for underprivileged students.</p>
-      `,
-      date: '2024-04-20',
-      time: '02:00 PM - 05:00 PM',
-      category: 'Education',
-      organization: {
-        name: 'Education First Foundation',
-        logo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-        rating: 4.9,
-        eventsCount: 32,
-        joinedDate: '2018',
-      },
-      skillsRequired: ['Teaching', 'Patience', 'Communication'],
-      volunteers: [
-        { id: 1, name: 'Arjun Kumar', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80' },
-        { id: 2, name: 'Neha Shah', avatar: 'https://images.unsplash.com/photo-1494790108777-296fd5c7c9b2?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80' },
-      ],
-      maxVolunteers: 20,
-      currentVolunteers: 18,
-      location: {
-        address: 'Dharavi Community Center, Mumbai, Maharashtra 400017',
-        coordinates: { lat: 19.0370, lng: 72.8495 },
-      },
-      requirements: [
-        'Must be at least 16 years old',
-        'Basic teaching or tutoring experience preferred',
-        'Comfortable working with children',
-        'Fluent in English and Hindi',
-      ],
-      benefits: [
-        'Teaching experience certificate',
-        'Community service hours',
-        'Professional development',
-        'Networking with educators',
-      ],
-      images: [
-        'https://images.unsplash.com/photo-1577896851231-70ef18881754?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      ],
-    },
-    '3': {
-      _id: '3',
-      title: 'Health Camp',
-      description: 'Medical camp for rural communities providing basic health checkups and medicines.',
-      longDescription: `
-        <p>Join Health for All Foundation for our medical health camp in Bandra West, Mumbai. This is an opportunity to provide essential healthcare services to underserved communities.</p>
-        
-        <h4>What to expect:</h4>
-        <ul>
-          <li>Medical equipment and supplies provided</li>
-          <li>Supervision by experienced medical professionals</li>
-          <li>4-hour health camp service</li>
-          <li>Basic medical training for volunteers</li>
-          <li>Certificate of medical service</li>
-        </ul>
-        
-        <h4>Impact:</h4>
-        <p>Last month, our health camp served over 200 patients with free checkups and medicines. Your participation directly contributes to better healthcare access for marginalized communities.</p>
-      `,
-      date: '2024-04-25',
-      time: '10:00 AM - 02:00 PM',
-      category: 'Healthcare',
-      organization: {
-        name: 'Health for All Foundation',
-        logo: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-        rating: 4.7,
-        eventsCount: 28,
-        joinedDate: '2020',
-      },
-      skillsRequired: ['Medical Knowledge', 'First Aid', 'Empathy'],
-      volunteers: [
-        { id: 1, name: 'Dr. Raj Patel', avatar: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80' },
-      ],
-      maxVolunteers: 30,
-      currentVolunteers: 25,
-      location: {
-        address: 'Bandra West Health Center, Mumbai, Maharashtra 400050',
-        coordinates: { lat: 19.0596, lng: 72.8295 },
-      },
-      requirements: [
-        'Medical background preferred (students welcome)',
-        'Basic first aid knowledge',
-        'Comfortable working with patients',
-        'Professional demeanor',
-      ],
-      benefits: [
-        'Medical service certificate',
-        'Clinical experience',
-        'Professional networking',
-        'Community health training',
-      ],
-      images: [
-        'https://images.unsplash.com/photo-1631815588090-d4bfec5b1ccb?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      ],
-    },
-  }
 
-  const event = eventData[id] || eventData['1']
+  useEffect(()=>{
+    const loadEvent=async()=>{
+      try{
+        setLoading(true);
+        const data=await fetchEventById(id);
 
-  // Similar events
-  const similarEvents = [
-    {
-      _id: '2',
-      title: 'Teaching Workshop',
-      description: 'Help underprivileged children with their studies.',
-      date: '2024-04-20',
-      category: 'Education',
-      skillsRequired: ['Teaching', 'Patience'],
-      volunteers: [1, 2],
-      maxVolunteers: 20,
-      image: 'https://images.unsplash.com/photo-1577896851231-70ef18881754?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
-    },
-    {
-      _id: '3',
-      title: 'Health Camp',
-      description: 'Medical camp for rural communities.',
-      date: '2024-04-25',
-      category: 'Healthcare',
-      skillsRequired: ['Medical Knowledge', 'First Aid'],
-      volunteers: [1],
-      maxVolunteers: 30,
-      image: 'https://images.unsplash.com/photo-1631815588090-d4bfec5b1ccb?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
-    },
-  ]
+        setEvent(data);
 
-  const handleApply = (e) => {
+      }catch(err){
+        toast.error(err.response?.data?.message || "Failed to load event");
+      }
+    finally{
+      setLoading(false);
+    }
+  };  if(id)loadEvent(); },[id]);
+  
+
+
+
+  // // Sample event data (in real app, fetch based on id)
+  // const eventData = {
+  //   '1': {
+  //     _id: '1',
+  //     title: 'Beach Cleanup Drive',
+  //     description: 'Join us in cleaning the local beach and protecting marine life. We need enthusiastic volunteers to help collect waste and sort recyclables. This event is part of our monthly initiative to keep our beaches clean and raise awareness about marine pollution.',
+  //     longDescription: `
+  //       <p>Join Ocean Conservation Society for our monthly beach cleanup event at Juhu Beach, Mumbai. This is a great opportunity to make a tangible difference in protecting our marine environment while meeting like-minded individuals passionate about conservation.</p>
+        
+  //       <h4>What to expect:</h4>
+  //       <ul>
+  //         <li>Cleanup equipment (gloves, bags, pickers) will be provided</li>
+  //         <li>Brief orientation on safety and waste sorting</li>
+  //         <li>2-hour cleanup session</li>
+  //         <li>Refreshments and snacks provided</li>
+  //         <li>Certificate of participation for volunteers</li>
+  //       </ul>
+        
+  //       <h4>Impact:</h4>
+  //       <p>Last month, our volunteers collected over 500 lbs of waste from this beach, preventing it from entering the ocean and harming marine life. Your participation directly contributes to cleaner beaches and healthier oceans.</p>
+  //     `,
+  //     date: '2024-04-15',
+  //     time: '09:00 AM - 12:00 PM',
+  //     category: 'Environment',
+  //     organization: {
+  //       name: 'Ocean Conservation Society',
+  //       logo: 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
+  //       rating: 4.8,
+  //       eventsCount: 45,
+  //       joinedDate: '2019',
+  //     },
+  //     skillsRequired: ['Teamwork', 'Physical Fitness', 'Environmental Awareness', 'Waste Sorting'],
+  //     volunteers: [
+  //       { id: 1, name: 'Sarah Johnson', avatar: 'https://images.unsplash.com/photo-1494790108777-296fd5c7c9b2?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80' },
+  //       { id: 2, name: 'Michael Chen', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80' },
+  //       { id: 3, name: 'Priya Patel', avatar: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80' },
+  //     ],
+  //     maxVolunteers: 50,
+  //     currentVolunteers: 32,
+  //     location: {
+  //       address: 'Juhu Beach, Mumbai, Maharashtra 400049',
+  //       coordinates: { lat: 19.1075, lng: 72.8261 },
+  //     },
+  //     requirements: [
+  //       'Must be at least 18 years old',
+  //       'Comfortable working outdoors',
+  //       'Able to lift up to 20 lbs',
+  //       'Wear closed-toe shoes and comfortable clothing',
+  //     ],
+  //     benefits: [
+  //       'Certificate of participation',
+  //       'Community service hours',
+  //       'Free refreshments',
+  //       'Networking with environmental enthusiasts',
+  //     ],
+  //     images: [
+  //       'https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+  //     ],
+  //   },
+  //   '2': {
+  //     _id: '2',
+  //     title: 'Teaching Workshop',
+  //     description: 'Help underprivileged children with their studies in mathematics and science.',
+  //     longDescription: `
+  //       <p>Join Education First Foundation for our teaching workshop in Dharavi, Mumbai. This is a wonderful opportunity to help shape young minds and make a lasting impact on children's education.</p>
+        
+  //       <h4>What to expect:</h4>
+  //       <ul>
+  //         <li>Teaching materials and curriculum provided</li>
+  //         <li>Training session on effective teaching methods</li>
+  //         <li>3-hour teaching session with small groups</li>
+  //         <li>Interaction with local teachers and community</li>
+  //         <li>Certificate of appreciation for volunteers</li>
+  //       </ul>
+        
+  //       <h4>Impact:</h4>
+  //       <p>Last month, our volunteers helped over 50 children improve their math and science scores. Your participation directly contributes to better educational outcomes for underprivileged students.</p>
+  //     `,
+  //     date: '2024-04-20',
+  //     time: '02:00 PM - 05:00 PM',
+  //     category: 'Education',
+  //     organization: {
+  //       name: 'Education First Foundation',
+  //       logo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
+  //       rating: 4.9,
+  //       eventsCount: 32,
+  //       joinedDate: '2018',
+  //     },
+  //     skillsRequired: ['Teaching', 'Patience', 'Communication'],
+  //     volunteers: [
+  //       { id: 1, name: 'Arjun Kumar', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80' },
+  //       { id: 2, name: 'Neha Shah', avatar: 'https://images.unsplash.com/photo-1494790108777-296fd5c7c9b2?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80' },
+  //     ],
+  //     maxVolunteers: 20,
+  //     currentVolunteers: 18,
+  //     location: {
+  //       address: 'Dharavi Community Center, Mumbai, Maharashtra 400017',
+  //       coordinates: { lat: 19.0370, lng: 72.8495 },
+  //     },
+  //     requirements: [
+  //       'Must be at least 16 years old',
+  //       'Basic teaching or tutoring experience preferred',
+  //       'Comfortable working with children',
+  //       'Fluent in English and Hindi',
+  //     ],
+  //     benefits: [
+  //       'Teaching experience certificate',
+  //       'Community service hours',
+  //       'Professional development',
+  //       'Networking with educators',
+  //     ],
+  //     images: [
+  //       'https://images.unsplash.com/photo-1577896851231-70ef18881754?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+  //     ],
+  //   },
+  //   '3': {
+  //     _id: '3',
+  //     title: 'Health Camp',
+  //     description: 'Medical camp for rural communities providing basic health checkups and medicines.',
+  //     longDescription: `
+  //       <p>Join Health for All Foundation for our medical health camp in Bandra West, Mumbai. This is an opportunity to provide essential healthcare services to underserved communities.</p>
+        
+  //       <h4>What to expect:</h4>
+  //       <ul>
+  //         <li>Medical equipment and supplies provided</li>
+  //         <li>Supervision by experienced medical professionals</li>
+  //         <li>4-hour health camp service</li>
+  //         <li>Basic medical training for volunteers</li>
+  //         <li>Certificate of medical service</li>
+  //       </ul>
+        
+  //       <h4>Impact:</h4>
+  //       <p>Last month, our health camp served over 200 patients with free checkups and medicines. Your participation directly contributes to better healthcare access for marginalized communities.</p>
+  //     `,
+  //     date: '2024-04-25',
+  //     time: '10:00 AM - 02:00 PM',
+  //     category: 'Healthcare',
+  //     organization: {
+  //       name: 'Health for All Foundation',
+  //       logo: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
+  //       rating: 4.7,
+  //       eventsCount: 28,
+  //       joinedDate: '2020',
+  //     },
+  //     skillsRequired: ['Medical Knowledge', 'First Aid', 'Empathy'],
+  //     volunteers: [
+  //       { id: 1, name: 'Dr. Raj Patel', avatar: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80' },
+  //     ],
+  //     maxVolunteers: 30,
+  //     currentVolunteers: 25,
+  //     location: {
+  //       address: 'Bandra West Health Center, Mumbai, Maharashtra 400050',
+  //       coordinates: { lat: 19.0596, lng: 72.8295 },
+  //     },
+  //     requirements: [
+  //       'Medical background preferred (students welcome)',
+  //       'Basic first aid knowledge',
+  //       'Comfortable working with patients',
+  //       'Professional demeanor',
+  //     ],
+  //     benefits: [
+  //       'Medical service certificate',
+  //       'Clinical experience',
+  //       'Professional networking',
+  //       'Community health training',
+  //     ],
+  //     images: [
+  //       'https://images.unsplash.com/photo-1631815588090-d4bfec5b1ccb?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+  //     ],
+  //   },
+  // }
+
+  
+
+  // // Similar events
+  // const similarEvents = [
+  //   {
+  //     _id: '2',
+  //     title: 'Teaching Workshop',
+  //     description: 'Help underprivileged children with their studies.',
+  //     date: '2024-04-20',
+  //     category: 'Education',
+  //     skillsRequired: ['Teaching', 'Patience'],
+  //     volunteers: [1, 2],
+  //     maxVolunteers: 20,
+  //     image: 'https://images.unsplash.com/photo-1577896851231-70ef18881754?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+  //   },
+  //   {
+  //     _id: '3',
+  //     title: 'Health Camp',
+  //     description: 'Medical camp for rural communities.',
+  //     date: '2024-04-25',
+  //     category: 'Healthcare',
+  //     skillsRequired: ['Medical Knowledge', 'First Aid'],
+  //     volunteers: [1],
+  //     maxVolunteers: 30,
+  //     image: 'https://images.unsplash.com/photo-1631815588090-d4bfec5b1ccb?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+  //   },
+  // ]
+  const ngo = event?.ngoId || {};
+  const volunteers = event?.volunteers || [];
+  const currentVolunteers = volunteers.length;
+  const maxVolunteers = Number(event?.maxVolunteers || 0);
+  const spotsLeft = Math.max(maxVolunteers - currentVolunteers, 0);
+
+  const eventDateText = useMemo(() => {
+    if (!event?.date) return "N/A";
+    try {
+      return format(new Date(event.date), "MMM dd, yyyy");
+    } catch {
+      return "N/A";
+    }
+  }, [event?.date]);
+
+
+
+ const handleApply=async(e)=>{
     e.preventDefault()
-    console.log('Application submitted:', applicationMessage)
-    setShowApplicationForm(false)
-    // Show success toast
+    if(!isAuthenticated){
+      toast.error('please login first')
+      return
+    }
+    if(userType!=='volunteer'){
+      toast.error('Only volunteers can apply for events')
+      return
+    }
+
+    try{
+      setIsApplying(true)
+      await volunteerForEvent(id)
+      toast.sucess("Apply successfully")
+      const refreshed=await fetchEventById(id)
+      setEvent(refreshed.data);
+      setApplicationMessage("");
+      setShowApplicationForm(false);
+    }catch(err){
+      toast.error(err.response?.data?.message || 'Application failed')
+  } finally {
+    setIsApplying(false);
   }
+};
+
+
+if (loading) {
+  return <div className="min-h-screen pt-24 text-center text-earth-600">Loading event...</div>;
+}
+if (!event) {
+  return <div className="min-h-screen pt-24 text-center text-earth-600">Event not found.</div>;
+
+
+ 
 
   return (
     <div className="min-h-screen bg-earth-50 pt-24 pb-16">
@@ -495,5 +581,5 @@ const EventDetails = () => {
     </div>
   )
 }
-
-export default EventDetails
+}
+export default EventDetails;

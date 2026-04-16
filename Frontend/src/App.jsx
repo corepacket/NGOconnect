@@ -3,9 +3,10 @@ import Layout from './components/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
 import Home from './pages/Home'
 import Events from './pages/Events'
-import EventDetails from './pages/EventDetails'
+import EventDetails from './pages/EventDetailsFixed'
 import VolunteerDashboard from './pages/VolunteerDashboard'
 import NGODashboard from './pages/NGODashboard'
+import PostEvent from './pages/PostEvent'
 import About from './pages/About'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -27,6 +28,7 @@ function App() {
         <Route path="dashboard" element={<ProtectedRoute><DashboardRedirect /></ProtectedRoute>} />
         <Route path="dashboard/volunteer" element={<ProtectedRoute requiredType="volunteer"><VolunteerDashboard /></ProtectedRoute>} />
         <Route path="dashboard/ngo" element={<ProtectedRoute requiredType="ngo"><NGODashboard /></ProtectedRoute>} />
+        <Route path="events/new" element={<ProtectedRoute requiredType="ngo"><PostEvent /></ProtectedRoute>} />
         <Route path="about" element={<About />} />
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />

@@ -1,49 +1,31 @@
+import { useEffect, useState } from 'react'
 import HeroSection from '../components/HeroSection'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { FaHandsHelping, FaLeaf, FaHeart, FaUsers } from 'react-icons/fa'
+import toast from 'react-hot-toast'
 import EventCard from '../components/EventCard'
+import { fetchEvents } from '../service/event.service'
+import { normalizeEvents } from '../lib/event-utils'
 
 const Home = () => {
-  // Sample featured events
-  const featuredEvents = [
-    {
-      _id: '1',
-      title: 'Beach Cleanup Drive',
-      description: 'Join us in cleaning the local beach and protecting marine life.',
-      date: '2024-04-15',
-      category: 'Environment',
-      skillsRequired: ['Teamwork', 'Physical Fitness'],
-      volunteers: [1, 2, 3],
-      maxVolunteers: 50,
-      location: 'Juhu Beach, Mumbai',
-      image: 'https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
-    },
-    {
-      _id: '2',
-      title: 'Teaching Workshop',
-      description: 'Help underprivileged children with their studies.',
-      date: '2024-04-20',
-      category: 'Education',
-      skillsRequired: ['Teaching', 'Patience'],
-      volunteers: [1, 2],
-      maxVolunteers: 20,
-      location: 'Dharavi, Mumbai',
-      image: 'https://images.unsplash.com/photo-1577896851231-70ef18881754?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
-    },
-    {
-      _id: '3',
-      title: 'Health Camp',
-      description: 'Medical camp for rural communities.',
-      date: '2024-04-25',
-      category: 'Healthcare',
-      skillsRequired: ['Medical Knowledge', 'First Aid'],
-      volunteers: [1],
-      maxVolunteers: 30,
-      location: 'Bandra West, Mumbai',
-      image: 'https://images.unsplash.com/photo-1631815588090-d4bfec5b1ccb?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
-    },
-  ]
+  const [featuredEvents, setFeaturedEvents] = useState([])
+  const [eventsLoading, setEventsLoading] = useState(true)
+
+  useEffect(() => {
+    const loadFeaturedEvents = async () => {
+      try {
+        const data = await fetchEvents()
+        setFeaturedEvents(normalizeEvents(data).slice(0, 3))
+      } catch (err) {
+        toast.error(err.response?.data?.message || 'Could not load featured events')
+      } finally {
+        setEventsLoading(false)
+      }
+    }
+
+    loadFeaturedEvents()
+  }, [])
 
   const features = [
     {
@@ -133,11 +115,41 @@ const Home = () => {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredEvents.map((event, index) => (
-              <EventCard key={event._id} event={event} />
-            ))}
-          </div>
+          {eventsLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[1, 2, 3].map((item) => (
+                <div key={item} className="bg-white rounded-2xl shadow-lg overflow-hidden animate-pulse">
+                  <div className="h-52 bg-earth-200" />
+                  <div className="p-6 space-y-3">
+                    <div className="h-4 bg-earth-200 rounded w-1/3" />
+                    <div className="h-6 bg-earth-200 rounded w-3/4" />
+                    <div className="h-4 bg-earth-100 rounded w-full" />
+                    <div className="h-4 bg-earth-100 rounded w-5/6" />
+                    <div className="h-11 bg-earth-200 rounded-xl" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : featuredEvents.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {featuredEvents.map((event) => (
+                <EventCard key={event._id} event={event} />
+              ))}
+            </div>
+          ) : (
+            <div className="max-w-2xl mx-auto text-center bg-white rounded-2xl shadow-lg border border-earth-100 px-8 py-12">
+              <h3 className="text-2xl font-display font-bold text-earth-900 mb-3">No featured events yet</h3>
+              <p className="text-earth-600 mb-6">
+                Seed a few demo events or let an NGO publish the first opportunity so volunteers see activity right away.
+              </p>
+              <Link
+                to="/events"
+                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-hope-600 to-compassion-600 text-white rounded-lg font-semibold"
+              >
+                Browse event page
+              </Link>
+            </div>
+          )}
 
           <div className="text-center mt-12">
             <Link
