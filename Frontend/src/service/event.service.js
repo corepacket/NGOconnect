@@ -54,3 +54,18 @@ export const rejectRegistration = async (eventId, registrationId) => {
   const res = await api.post(`/events/${eventId}/registrations/${registrationId}/reject`);
   return res.data;
 };
+
+export const fetchVolunteerApplications = async () => {
+  const res = await api.get("/events/volunteer/applications");
+  return res.data;
+};
+
+export const fetchVolunteerSavedEvents = async () => {
+  const res = await api.get("/events/volunteer/saved-events");
+  return res.data;
+};
+
+export const toggleSaveEvent = async (eventId) => {
+  const res = await api.post(`/events/${eventId}/save-toggle`);
+  return res.data;
+};

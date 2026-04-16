@@ -157,6 +157,12 @@ const VolunteerDashboard = () => {
               Welcome back, <span className="gradient-text">{String(user.name).split(' ')[0]}</span>!
             </h1>
             <p className="text-earth-600 mt-2">Manage your volunteer activities and track your impact</p>
+            <Link
+              to="/dashboard/volunteer/my-events"
+              className="inline-flex mt-3 px-4 py-2 rounded-lg bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700"
+            >
+              Open My Registered/Saved/History
+            </Link>
           </div>
           <button
             onClick={handleLogout}
@@ -245,14 +251,25 @@ const VolunteerDashboard = () => {
             {['overview', 'registered', 'saved', 'history'].map((tab) => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab)}
+                onClick={() => {
+                  if (tab === 'overview') {
+                    setActiveTab('overview')
+                  } else {
+                    navigate('/dashboard/volunteer/my-events', { replace: false })
+                  }
+                }}
                 className={`pb-4 px-1 capitalize font-medium transition-colors relative ${
-                  activeTab === tab ? 'text-primary-600' : 'text-earth-500 hover:text-earth-700'
+                  tab === 'overview' && activeTab === 'overview'
+                    ? 'text-primary-600'
+                    : 'text-earth-500 hover:text-earth-700'
                 }`}
               >
                 {tab}
-                {activeTab === tab && (
-                  <motion.div layoutId="volunteerTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
+                {tab === 'overview' && activeTab === 'overview' && (
+                  <motion.div
+                    layoutId="volunteerTab"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600"
+                  />
                 )}
               </button>
             ))}
@@ -289,54 +306,8 @@ const VolunteerDashboard = () => {
             </div>
           )}
 
-          {activeTab === 'registered' && (
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-xl font-display font-semibold text-earth-900 mb-4">My Registered Events</h3>
-              <div className="rounded-xl border border-dashed border-earth-200 bg-earth-50 px-6 py-10 text-center">
-                <p className="text-earth-800 font-medium mb-2">Registration history is not wired yet</p>
-                <p className="text-earth-500 text-sm mb-4">
-                  You can still browse and apply for events now. This tab can later be connected to your `eventsRegistered` data.
-                </p>
-                <Link
-                  to="/events"
-                  className="inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700"
-                >
-                  Browse events
-                </Link>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'saved' && (
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-xl font-display font-semibold text-earth-900 mb-4">Explore More Opportunities</h3>
-              {eventsLoading ? (
-                <div className="text-sm text-earth-500 py-8 text-center">Loading suggestions...</div>
-              ) : recommendedEvents.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  {recommendedEvents.slice(0, 4).map((event) => (
-                    <EventCard key={event._id} event={event} />
-                  ))}
-                </div>
-              ) : (
-                <div className="rounded-xl border border-dashed border-earth-200 bg-earth-50 px-6 py-10 text-center text-earth-500">
-                  No event suggestions available yet.
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'history' && (
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-xl font-display font-semibold text-earth-900 mb-4">Volunteer History</h3>
-              <div className="rounded-xl border border-dashed border-earth-200 bg-earth-50 px-6 py-10 text-center">
-                <p className="text-earth-800 font-medium mb-2">Your completed events will show here</p>
-                <p className="text-earth-500 text-sm">
-                  This screen is ready for real history data once volunteer registration tracking is added end to end.
-                </p>
-              </div>
-            </div>
-          )}
+          {/* When user clicks Registered/Saved/History, we navigate them to /dashboard/volunteer/my-events,
+              so only the overview content is rendered inside this component. */}
         </motion.div>
 
         {/* Edit Profile Modal */}

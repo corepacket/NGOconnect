@@ -44,6 +44,12 @@ const userSchema = new mongoose.Schema(
             ref: "Event"
         }
     ],
+        savedEvents: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: "Event"
+        }
+    ],
     }, {timestamps: true}
 )
 

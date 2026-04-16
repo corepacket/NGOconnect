@@ -5,6 +5,7 @@ import Home from './pages/Home'
 import Events from './pages/Events'
 import EventDetails from './pages/EventDetailsFixed'
 import VolunteerDashboard from './pages/VolunteerDashboard'
+import VolunteerMyEvents from './pages/VolunteerMyEvents'
 import NGODashboard from './pages/NGODashboard'
 import PostEvent from './pages/PostEvent'
 import About from './pages/About'
@@ -27,6 +28,7 @@ function App() {
         <Route path="events/:id" element={<EventDetails />} />
         <Route path="dashboard" element={<ProtectedRoute><DashboardRedirect /></ProtectedRoute>} />
         <Route path="dashboard/volunteer" element={<ProtectedRoute requiredType="volunteer"><VolunteerDashboard /></ProtectedRoute>} />
+        <Route path="dashboard/volunteer/my-events" element={<ProtectedRoute requiredType="volunteer"><VolunteerMyEvents /></ProtectedRoute>} />
         <Route path="dashboard/ngo" element={<ProtectedRoute requiredType="ngo"><NGODashboard /></ProtectedRoute>} />
         <Route path="events/new" element={<ProtectedRoute requiredType="ngo"><PostEvent /></ProtectedRoute>} />
         <Route path="about" element={<About />} />

@@ -1,7 +1,6 @@
 import Registration from "../models/registration.model.js"
 import Event from "../models/event.model.js"
 import User from "../models/user.model.js"
-import NGO from "../models/ngo.model.js"
 
 export const volunteerForEvent = async (req, res) => {
     try{
@@ -200,5 +199,110 @@ export const rejectRegistration = async(req, res) => {
     catch(error){
         console.log(`Error in rejecting registration : ${error}`)
         return res.status(500).json({message: "Internal error in rejecting registration"})
+    }
+}
+
+const mapEventLite = (event) => ({
+    _id: event?._id,
+    title: event?.title || "Event",
+    date: event?.date,
+    location: event?.location || "",
+    image: event?.image || "",
+    maxVolunteers: Number(event?.maxVolunteers || 0),
+    ngo: {
+        _id: event?.ngoId?._id,
+        name: event?.ngoId?.name || "NGO",
+        logo: event?.ngoId?.logo || "",
+    },
+})
+
+export const getVolunteerApplications = async (req, res) => {
+    try {
+        if (req.role !== "user") {
+            return res.status(403).json({ message: "Only volunteers can view their applications" })
+        }
+
+        const registrations = await Registration.find({ userId: req.user._id })
+            .populate({
+                path: "eventId",
+                select: "title date location image maxVolunteers ngoId",
+                populate: { path: "ngoId", select: "name logo" },
+            })
+            .sort({ createdAt: -1 })
+
+        const now = new Date()
+        const data = registrations
+            .filter((r) => r.eventId)
+            .map((r) => {
+                const eventDate = r.eventId?.date ? new Date(r.eventId.date) : null
+                const isPast = Boolean(eventDate && eventDate < now)
+                return {
+                    _id: r._id,
+                    status: r.status,
+                    appliedAt: r.appliedAt,
+                    message: r.message || "",
+                    isPast,
+                    event: mapEventLite(r.eventId),
+                }
+            })
+
+        return res.status(200).json({ registrations: data })
+    } catch (error) {
+        console.log(`Error in getting volunteer applications : ${error}`)
+        return res.status(500).json({ message: "Internal error in fetching volunteer applications" })
+    }
+}
+
+export const toggleSaveEvent = async (req, res) => {
+    try {
+        if (req.role !== "user") {
+            return res.status(403).json({ message: "Only volunteers can save events" })
+        }
+
+        const eventId = req.params.id
+        const event = await Event.findById(eventId)
+        if (!event) {
+            return res.status(404).json({ message: "Event not found" })
+        }
+
+        const user = await User.findById(req.user._id).select("savedEvents")
+        const alreadySaved = user.savedEvents.some((savedId) => savedId.toString() === eventId)
+
+        await User.findByIdAndUpdate(
+            req.user._id,
+            alreadySaved
+                ? { $pull: { savedEvents: eventId } }
+                : { $addToSet: { savedEvents: eventId } }
+        )
+
+        return res.status(200).json({
+            saved: !alreadySaved,
+            message: alreadySaved ? "Event removed from saved list" : "Event saved",
+        })
+    } catch (error) {
+        console.log(`Error in saving event : ${error}`)
+        return res.status(500).json({ message: "Internal error in saving event" })
+    }
+}
+
+export const getVolunteerSavedEvents = async (req, res) => {
+    try {
+        if (req.role !== "user") {
+            return res.status(403).json({ message: "Only volunteers can view saved events" })
+        }
+
+        const user = await User.findById(req.user._id)
+            .populate({
+                path: "savedEvents",
+                select: "title date location image maxVolunteers ngoId",
+                populate: { path: "ngoId", select: "name logo" },
+            })
+            .select("savedEvents")
+
+        const savedEvents = (user?.savedEvents || []).map(mapEventLite)
+        return res.status(200).json({ savedEvents })
+    } catch (error) {
+        console.log(`Error in getting saved events : ${error}`)
+        return res.status(500).json({ message: "Internal error in fetching saved events" })
     }
 }
