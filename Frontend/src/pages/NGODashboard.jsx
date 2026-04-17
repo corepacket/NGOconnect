@@ -26,6 +26,14 @@ const NGODashboard = () => {
   const [applications, setApplications] = useState([])
   const [actioning, setActioning] = useState({})
   const [logoUploading, setLogoUploading] = useState(false)
+  const [editingEventId, setEditingEventId] = useState('')
+  const [editForm, setEditForm] = useState({
+    title: '',
+    location: '',
+    timings: '',
+    maxVolunteers: '',
+  })
+  const [eventUpdating, setEventUpdating] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -164,32 +172,67 @@ const NGODashboard = () => {
     }
   }
 
-  const handleEditEvent = async (event) => {
+  const startEditingEvent = (event) => {
     if (!event?._id) {
       toast.error('Event data not found')
       return
     }
-    const title = window.prompt('Update title', event.title)
-    if (title === null) return
-    const location = window.prompt('Update location', event.locationText || event.location?.address || '')
-    if (location === null) return
-    const timings = window.prompt('Update time', event.timings || '')
-    if (timings === null) return
-    const maxVolunteers = window.prompt('Update max volunteers', String(event.maxVolunteers || ''))
-    if (maxVolunteers === null) return
+    setEditingEventId(event._id)
+    setEditForm({
+      title: event.title || '',
+      location: event.locationText || event.location?.address || '',
+      timings: event.timings || '',
+      maxVolunteers: String(event.maxVolunteers || ''),
+    })
+  }
+
+  const cancelEditingEvent = () => {
+    setEditingEventId('')
+    setEditForm({
+      title: '',
+      location: '',
+      timings: '',
+      maxVolunteers: '',
+    })
+  }
+
+  const handleEditInputChange = (key, value) => {
+    setEditForm((prev) => ({ ...prev, [key]: value }))
+  }
+
+  const handleSaveEventEdits = async (eventId) => {
+    if (!eventId) return
+    const cleanedTitle = editForm.title.trim()
+    const cleanedLocation = editForm.location.trim()
+    const cleanedTimings = editForm.timings.trim()
+    const maxVolunteers = Number(editForm.maxVolunteers)
+
+    if (!cleanedTitle || !cleanedLocation || !cleanedTimings) {
+      toast.error('Title, location and time are required')
+      return
+    }
+
+    if (!Number.isFinite(maxVolunteers) || maxVolunteers <= 0) {
+      toast.error('Max volunteers must be a positive number')
+      return
+    }
 
     const payload = new FormData()
-    payload.append('title', title.trim())
-    payload.append('location', location.trim())
-    payload.append('timings', timings.trim())
-    payload.append('maxVolunteers', String(Number(maxVolunteers)))
+    payload.append('title', cleanedTitle)
+    payload.append('location', cleanedLocation)
+    payload.append('timings', cleanedTimings)
+    payload.append('maxVolunteers', String(maxVolunteers))
 
+    setEventUpdating(true)
     try {
-      await updateEvent(event._id, payload)
+      await updateEvent(eventId, payload)
       toast.success('Event updated')
+      cancelEditingEvent()
       await refreshMyEvents()
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to update event')
+    } finally {
+      setEventUpdating(false)
     }
   }
 
@@ -405,16 +448,54 @@ const NGODashboard = () => {
                   <div key={event.id} className="flex items-center gap-4 p-4 bg-earth-50 rounded-xl">
                     <img src={event.image} alt={event.title} className="w-20 h-20 rounded-lg object-cover" />
                     <div className="flex-1">
-                      <h4 className="font-semibold text-earth-900">{event.title}</h4>
-                      <div className="flex items-center text-sm text-earth-500 mt-1">
-                        <HiCalendar className="w-4 h-4 mr-1" />
-                        <span>{new Date(event.date).toLocaleDateString()}</span>
-                        <HiLocationMarker className="w-4 h-4 ml-3 mr-1" />
-                        <span>{event.location}</span>
-                      </div>
-                      <p className="text-sm text-earth-600 mt-1">
-                        {event.volunteers} / {event.maxVolunteers} volunteers
-                      </p>
+                      {editingEventId === event.id ? (
+                        <div className="space-y-2">
+                          <input
+                            type="text"
+                            value={editForm.title}
+                            onChange={(e) => handleEditInputChange('title', e.target.value)}
+                            className="w-full px-3 py-2 text-sm border border-earth-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            placeholder="Event title"
+                          />
+                          <input
+                            type="text"
+                            value={editForm.location}
+                            onChange={(e) => handleEditInputChange('location', e.target.value)}
+                            className="w-full px-3 py-2 text-sm border border-earth-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            placeholder="Location"
+                          />
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <input
+                              type="text"
+                              value={editForm.timings}
+                              onChange={(e) => handleEditInputChange('timings', e.target.value)}
+                              className="w-full px-3 py-2 text-sm border border-earth-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                              placeholder="Timings"
+                            />
+                            <input
+                              type="number"
+                              min="1"
+                              value={editForm.maxVolunteers}
+                              onChange={(e) => handleEditInputChange('maxVolunteers', e.target.value)}
+                              className="w-full px-3 py-2 text-sm border border-earth-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                              placeholder="Max volunteers"
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <h4 className="font-semibold text-earth-900">{event.title}</h4>
+                          <div className="flex items-center text-sm text-earth-500 mt-1">
+                            <HiCalendar className="w-4 h-4 mr-1" />
+                            <span>{new Date(event.date).toLocaleDateString()}</span>
+                            <HiLocationMarker className="w-4 h-4 ml-3 mr-1" />
+                            <span>{event.location}</span>
+                          </div>
+                          <p className="text-sm text-earth-600 mt-1">
+                            {event.volunteers} / {event.maxVolunteers} volunteers
+                          </p>
+                        </>
+                      )}
                     </div>
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -423,27 +504,50 @@ const NGODashboard = () => {
                     >
                       {event.status}
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/events/${event.id}`)}
-                      className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm hover:bg-primary-700"
-                    >
-                      View Details
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleEditEvent(myEvents.find((e) => e._id === event.id))}
-                      className="px-4 py-2 border border-earth-200 rounded-lg text-sm hover:bg-earth-50"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteEvent(event.id)}
-                      className="px-4 py-2 border border-red-200 text-red-600 rounded-lg text-sm hover:bg-red-50"
-                    >
-                      Delete
-                    </button>
+                    {editingEventId === event.id ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleSaveEventEdits(event.id)}
+                          disabled={eventUpdating}
+                          className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm hover:bg-primary-700 disabled:opacity-60"
+                        >
+                          {eventUpdating ? 'Saving...' : 'Save'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={cancelEditingEvent}
+                          disabled={eventUpdating}
+                          className="px-4 py-2 border border-earth-200 rounded-lg text-sm hover:bg-earth-50 disabled:opacity-60"
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/events/${event.id}`)}
+                          className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm hover:bg-primary-700"
+                        >
+                          View Details
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => startEditingEvent(myEvents.find((e) => e._id === event.id))}
+                          className="px-4 py-2 border border-earth-200 rounded-lg text-sm hover:bg-earth-50"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteEvent(event.id)}
+                          className="px-4 py-2 border border-red-200 text-red-600 rounded-lg text-sm hover:bg-red-50"
+                        >
+                          Delete
+                        </button>
+                      </>
+                    )}
                   </div>
                 ))}
                 {dashboardEvents.length === 0 && (

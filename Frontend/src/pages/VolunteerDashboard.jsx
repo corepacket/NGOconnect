@@ -290,7 +290,7 @@ const VolunteerDashboard = () => {
           {/* When user clicks Registered/Saved/History, we navigate them to /dashboard/volunteer/my-events,
               so only the overview content is rendered inside this component. */}
         </motion.div>
-
+ 
         {/* Edit Profile Modal */}
         {showEditProfile && (
           <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
