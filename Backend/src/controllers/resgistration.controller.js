@@ -1,11 +1,7 @@
 import Registration from "../models/registration.model.js"
-<<<<<<< HEAD
-import User from "../models/user.model.js"
-=======
 import Event from "../models/event.model.js"
 import User from "../models/user.model.js"
 import NGO from "../models/ngo.model.js"
->>>>>>> f3a6fc8f889dddd32d507f038a41d6a32157b48d
 
 export const volunteerForEvent = async (req, res) => {
     try{
@@ -22,35 +18,6 @@ export const volunteerForEvent = async (req, res) => {
             return res.status(404).json({message: "Event not found"})
         }
 
-<<<<<<< HEAD
-        const existing = await Registration.findOne({userId: userId, eventId: eventId})
-        if(existing){
-            if(existing.status=="rejected"){
-                return res.status(400).json({message: "Application rejected"})
-            }
-            else if(existing.status=="approved"){
-                return res.status(400).json({message: "Already registered"})
-            }
-            else{
-                return res.status(400).json({message: "Approval of registration pending"})
-            }
-        }
-
-        const approvedRegs = await Registration.find({eventId: eventId, status: "approved"})
-        if(approvedRegs.length == event.maxVolunteers){
-            return res.status(400).json({message: "No more volunteers needed for this event"})
-        }
-
-        const {message} = req.body
-
-        await Registration.create({
-            userId,
-            eventId,
-            message,
-        })
-
-        return res.status(200).json({message: "Registration successfully completed and sent for approval"})
-=======
         const existing = await Registration.findOne({ userId, eventId })
         if (existing) {
             return res.status(400).json({ message: `Already applied (${existing.status}).` })
@@ -64,7 +31,6 @@ export const volunteerForEvent = async (req, res) => {
         })
 
         return res.status(201).json(registration)
->>>>>>> f3a6fc8f889dddd32d507f038a41d6a32157b48d
     }
     catch(error){
         console.log(`Error in registering for event : ${error}`)
@@ -80,18 +46,6 @@ export const viewEventRegistrations = async (req, res) => {
 
         const eventId = req.params.eventId
         const event = await Event.findById(eventId)
-<<<<<<< HEAD
-        if(!event){
-            return res.status(404).json({message: "Event not found"})
-        }
-
-        if (!event.ngoId.equals(req.user._id)) {
-            return res.status(403).json({ message: "Not authorized to view registrations" });
-        }
-
-        const registrations = await Registration.find({eventId})
-        .populate("userId", "fullname profilePic")
-=======
 
         if (!event) {
             return res.status(400).json({ message: "Cannot find event" })
@@ -120,10 +74,6 @@ export const viewEventRegistrations = async (req, res) => {
                 } : null,
             })),
         })
->>>>>>> f3a6fc8f889dddd32d507f038a41d6a32157b48d
-
-        const users = registrations.map(reg => reg.userId)
-        return res.status(200).json(users)
     }
     catch(error){
         console.log(`Error in viewing registrations : ${error}`)
@@ -180,16 +130,11 @@ export const acceptRegistration = async(req, res) => {
             return res.status(403).json({ message: "Only NGOs can view registrations" })
         }
 
-<<<<<<< HEAD
-        const eventId = req.params.eventId
-        const event = await Event.findById(eventId)
-=======
         const eventId = req.params.id
         const registrationId = req.params.registrationId
 
         const event = await Event.findById(eventId)
 
->>>>>>> f3a6fc8f889dddd32d507f038a41d6a32157b48d
         if (!event) {
             return res.status(400).json({ message: "Cannot find event" })
         }
@@ -198,18 +143,6 @@ export const acceptRegistration = async(req, res) => {
             return res.status(403).json({ message: "Not authorized to accept registrations" })
         }
 
-<<<<<<< HEAD
-        const user = await User.findById(req.params.userId)
-        if(!user){
-            return res.status(400).json({message: "Unregistered user"})
-        }
-
-        await Registration.findOneAndUpdate({userId: user._id, eventId: eventId}, {
-            status: "approved"
-        })
-
-        return res.status(200).json({message: "Accepted user registration"})
-=======
         const registration = await Registration.findOne({ _id: registrationId, eventId })
         if (!registration) {
             return res.status(404).json({ message: "Registration not found" })
@@ -228,7 +161,6 @@ export const acceptRegistration = async(req, res) => {
         await User.findByIdAndUpdate(registration.userId, { $addToSet: { eventsRegistered: eventId } })
 
         return res.status(200).json({ message: "Approved" })
->>>>>>> f3a6fc8f889dddd32d507f038a41d6a32157b48d
     }
     catch(error){
         console.log(`Error in accepting registration : ${error}`)
@@ -242,34 +174,13 @@ export const rejectRegistration = async(req, res) => {
             return res.status(403).json({ message: "Only NGOs can view registrations" })
         }
 
-<<<<<<< HEAD
-        const eventId = req.params.eventId
-=======
         const eventId = req.params.id
         const registrationId = req.params.registrationId
 
->>>>>>> f3a6fc8f889dddd32d507f038a41d6a32157b48d
         const event = await Event.findById(eventId)
         if (!event) {
             return res.status(400).json({ message: "Cannot find event" })
         }
-<<<<<<< HEAD
-
-        if (!event.ngoId.equals(req.user._id)) {
-            return res.status(403).json({ message: "Not authorized to reject registrations" })
-        }
-
-        const user = await User.findById(req.params.userId)
-        if(!user){
-            return res.status(400).json({message: "Unregistered user"})
-        }
-
-        await Registration.findOneAndUpdate({userId: user._id, eventId: eventId}, {
-            status: "rejected"
-        })
-
-        return res.status(200).json({message: "Rejected user registration"})
-=======
         
         if (event.ngoId.toString() !== req.user._id.toString()) {
             return res.status(403).json({ message: "Not authorized" })
@@ -284,7 +195,6 @@ export const rejectRegistration = async(req, res) => {
         await registration.save()
 
         return res.status(200).json({ message: "Rejected" })
->>>>>>> f3a6fc8f889dddd32d507f038a41d6a32157b48d
     }
     catch(error){
         console.log(`Error in rejecting registration : ${error}`)

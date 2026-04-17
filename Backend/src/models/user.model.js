@@ -35,7 +35,7 @@ const userSchema = new mongoose.Schema(
             {
                 type: String,
                 enum: ["Teaching","Healthcare","Environmental Conservation","Animal Care","Event Management","Fundraising","Social Media","Web Development","Graphic Design","Photography","Writing","Public Speaking","First Aid","Counselling","Legal Aid","Research"],
-                required: true
+                // required: true
             }
         ],
         savedEvents: [

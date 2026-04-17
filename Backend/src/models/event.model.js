@@ -53,15 +53,12 @@ const eventSchema = new mongoose.Schema(
       type: String
     }
   ],
-<<<<<<< HEAD
-=======
 
   requirements:[{type:String}],
 
   benefits:[{type:String}],
   
 
->>>>>>> f3a6fc8f889dddd32d507f038a41d6a32157b48d
   maxVolunteers: {
     type: Number,
     required: true
