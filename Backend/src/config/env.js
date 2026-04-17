@@ -21,7 +21,7 @@ if (cloudinaryMissing.length > 0) {
   )
 }
 
-const parsedOrigins = (process.env.CORS_ORIGIN || process.env.CLIENT_URL || "http://localhost:5173")
+const parsedOrigins = (process.env.CORS_ORIGIN || process.env.CLIENT_URL || "http://localhost:5173,http://localhost:5174,https://res.cloudinary.com")
   .split(",")
   .map((origin) => origin.trim())
   .filter(Boolean)

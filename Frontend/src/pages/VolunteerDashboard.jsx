@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { logoutVolunteer, updateVolunteerProfilePic } from '../service/auth.service'
+import { updateVolunteerProfilePic } from '../service/auth.service'
 import {
   HiCalendar,
   HiUserGroup,
@@ -9,8 +9,7 @@ import {
   HiClock,
   HiMail,
   HiPhone,
-  HiLogout,
-  HiX,
+    HiX,
   HiSave,
 } from 'react-icons/hi'
 import { useAuth } from '../auth/AuthContext'
@@ -84,18 +83,7 @@ const VolunteerDashboard = () => {
     }
   }, [])
 
-  const handleLogout = async() => {
-    try{
-      await logoutVolunteer();
-
-    }catch(err){
-      console.error("Volunteer logout unsuccessfull")
-    }
-    logout()
-    toast.success('Logged out successfully')
-    navigate('/')
-  }
-
+  
   const handleProfileUpdate = (e) => {
     e.preventDefault()
     // Here you would typically make an API call to update the profile
@@ -164,13 +152,6 @@ const VolunteerDashboard = () => {
               Open My Registered/Saved/History
             </Link>
           </div>
-          <button
-            onClick={handleLogout}
-            className="inline-flex items-center gap-2 px-4 py-2 border border-earth-200 rounded-lg text-earth-600 hover:bg-earth-50 hover:text-earth-900 transition-colors"
-          >
-            <HiLogout className="w-5 h-5" />
-            Log out
-          </button>
         </motion.div>
 
         <motion.div
@@ -281,7 +262,7 @@ const VolunteerDashboard = () => {
             <div className="space-y-6">
               <div className="bg-white rounded-2xl shadow-lg p-6">
                 <div className="flex items-center justify-between gap-4 mb-4">
-                  <h3 className="text-xl font-display font-semibold text-earth-900">Recommended Events</h3>
+                  <h3 className="text-xl font-display font-semibold text-earth-900">Upcoming Events</h3>
                   <Link to="/events" className="text-sm font-semibold text-primary-600 hover:text-primary-700">
                     View all
                   </Link>

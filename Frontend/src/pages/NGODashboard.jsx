@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { logoutNGO } from '../service/auth.service'
 import{
   HiCalendar,
   HiUserGroup,
@@ -9,8 +8,7 @@ import{
   HiClock,
   HiCheckCircle,
   HiXCircle,
-  HiLogout,
-  HiPlus,
+    HiPlus,
 } from 'react-icons/hi'
 import { useAuth } from '../auth/AuthContext'
 import toast from 'react-hot-toast'
@@ -198,17 +196,7 @@ const NGODashboard = () => {
   const dashboardEvents = myEvents.map(mapEventRow)
   const pendingCount = applications.filter((a) => a.status === 'pending').length
 
-  const handleLogout = async () => {
-    try {
-      await logoutNGO()
-    } catch (err) {
-      console.error('NGO logout request failed')
-    }
-    logout()
-    toast.success('Logged out successfully')
-    navigate('/')
-  }
-
+  
   return (
     <div className="min-h-screen bg-earth-50 pt-24 pb-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -224,13 +212,6 @@ const NGODashboard = () => {
             </h1>
             <p className="text-earth-600 mt-2">{ngo.name} – Manage your events and volunteers</p>
           </div>
-          <button
-            onClick={handleLogout}
-            className="inline-flex items-center gap-2 px-4 py-2 border border-earth-200 rounded-lg text-earth-600 hover:bg-earth-50 hover:text-earth-900 transition-colors"
-          >
-            <HiLogout className="w-5 h-5" />
-            Log out
-          </button>
         </motion.div>
 
         <motion.div
@@ -339,6 +320,14 @@ const NGODashboard = () => {
                         <div className="text-sm text-earth-600">
                           {event.volunteers} / {event.maxVolunteers} volunteers
                         </div>
+                        <div className="mt-3">
+                          <button
+                            onClick={() => navigate(`/events/${event.id}`)}
+                            className="w-full px-3 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
+                          >
+                            View Details
+                          </button>
+                        </div>
                       </div>
                     ))}
                   {dashboardEvents.filter((e) => e.status === 'active').length === 0 && (
@@ -434,6 +423,13 @@ const NGODashboard = () => {
                     >
                       {event.status}
                     </span>
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/events/${event.id}`)}
+                      className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm hover:bg-primary-700"
+                    >
+                      View Details
+                    </button>
                     <button
                       type="button"
                       onClick={() => handleEditEvent(myEvents.find((e) => e._id === event.id))}

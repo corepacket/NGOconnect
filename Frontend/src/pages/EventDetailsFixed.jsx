@@ -12,11 +12,12 @@ import { format } from "date-fns";
 import toast from "react-hot-toast";
 import VolunteerList from "../components/VolunteerList";
 import { fetchEventById, volunteerForEvent } from "../service/event.service";
+import { saveEvent, unsaveEvent, getSavedEvents } from "../service/user.service";
 import { useAuth } from "../auth/AuthContext";
 import { normalizeEvent } from "../lib/event-utils";
 
-const fallbackImage = "https://via.placeholder.com/1200x500?text=Event+Image";
-const fallbackLogo = "https://via.placeholder.com/100?text=NGO";
+const fallbackImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='500' viewBox='0 0 1200 500'%3E%3Crect fill='%23f3f4f6' width='1200' height='500'/%3E%3Ctext fill='%236b7280' font-family='Arial' font-size='24' x='50%25' y='50%25' text-anchor='middle' dy='.3em'%3EEvent Image%3C/text%3E%3C/svg%3E";
+const fallbackLogo = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect fill='%23e5e7eb' width='100' height='100'/%3E%3Ctext fill='%236b7280' font-family='Arial' font-size='14' x='50%25' y='50%25' text-anchor='middle' dy='.3em'%3ENGO%3C/text%3E%3C/svg%3E";
 
 const EventDetailsFixed = () => {
   const { id } = useParams();
@@ -27,6 +28,8 @@ const EventDetailsFixed = () => {
   const [showApplicationForm, setShowApplicationForm] = useState(false);
   const [applicationMessage, setApplicationMessage] = useState("");
   const [isApplying, setIsApplying] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     const loadEvent = async () => {
@@ -34,6 +37,17 @@ const EventDetailsFixed = () => {
         setLoading(true);
         const data = await fetchEventById(id);
         setEvent(normalizeEvent(data));
+        
+        // Check if event is saved by the user
+        if (isAuthenticated && userType === "volunteer") {
+          try {
+            const savedEventsData = await getSavedEvents();
+            const savedEvents = savedEventsData.events || [];
+            setIsSaved(savedEvents.some(savedEvent => savedEvent._id === id));
+          } catch (err) {
+            console.error("Failed to check saved status:", err);
+          }
+        }
       } catch (err) {
         toast.error(err.response?.data?.message || "Failed to load event");
       } finally {
@@ -42,7 +56,7 @@ const EventDetailsFixed = () => {
     };
 
     if (id) loadEvent();
-  }, [id]);
+  }, [id, isAuthenticated, userType]);
 
   const ngo = event?.organization || {};
   const volunteers = Array.isArray(event?.volunteers) ? event.volunteers : [];
@@ -89,6 +103,35 @@ const EventDetailsFixed = () => {
       toast.error(err.response?.data?.message || "Application failed");
     } finally {
       setIsApplying(false);
+    }
+  };
+
+  const handleSaveEvent = async () => {
+    if (!isAuthenticated) {
+      toast.error("Please login first");
+      return;
+    }
+    if (userType !== "volunteer") {
+      toast.error("Only volunteers can save events");
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      
+      if (isSaved) {
+        await unsaveEvent(id);
+        toast.success("Event removed from saved events");
+        setIsSaved(false);
+      } else {
+        await saveEvent(id);
+        toast.success("Event saved successfully");
+        setIsSaved(true);
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to save event");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -244,6 +287,18 @@ const EventDetailsFixed = () => {
                   </div>
                 </form>
               )}
+
+              <button
+                onClick={handleSaveEvent}
+                disabled={isSaving}
+                className={`w-full px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${
+                  isSaved
+                    ? "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300"
+                    : "bg-white text-primary-600 border border-primary-200 hover:bg-primary-50"
+                } disabled:opacity-70`}
+              >
+                {isSaving ? "Processing..." : isSaved ? "Remove from Saved" : "Save Event"}
+              </button>
             </div>
 
             <div className="bg-white rounded-2xl shadow-lg p-6">

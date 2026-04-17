@@ -2,11 +2,14 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { HiCalendar, HiLocationMarker, HiUserGroup } from 'react-icons/hi'
 import { format } from 'date-fns'
-import { normalizeEvent } from '../lib/event-utils'
+import { normalizeEvent, handleImageError } from '../lib/event-utils'
 
 const EventCard = ({ event }) => {
   const normalizedEvent = normalizeEvent(event)
   const eventDate = normalizedEvent.date ? format(new Date(normalizedEvent.date), 'PPP') : 'Date TBD'
+
+  console.log('EventCard - normalizedEvent:', normalizedEvent);
+  console.log('EventCard - image URL:', normalizedEvent.image);
 
   return (
     <motion.div
@@ -21,6 +24,7 @@ const EventCard = ({ event }) => {
           src={normalizedEvent.image}
           alt={normalizedEvent.title}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          onError={handleImageError}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         <div className="absolute inset-x-4 bottom-4 flex items-center justify-between gap-3">

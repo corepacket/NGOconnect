@@ -6,7 +6,7 @@ import { HiCalendar, HiSparkles } from "react-icons/hi";
 import EventCard from "../components/EventCard";
 import { fetchEvents } from "../service/event.service";
 import { useAuth } from "../auth/AuthContext";
-import { normalizeEvents } from "../lib/event-utils";
+import { normalizeEvents, handleImageError } from "../lib/event-utils";
 
 const Events = () => {
   const { userType, isAuthenticated } = useAuth();

@@ -113,7 +113,7 @@ const VolunteerMyEvents = () => {
       </div>
       <div className="mt-4 flex gap-3">
         <Link to={`/events/${event._id}`} className="px-4 py-2 rounded-lg bg-primary-600 text-white text-sm font-medium">
-          Open event
+          View Event
         </Link>
         <button
           type="button"
